@@ -56,11 +56,15 @@ ExceptionOr<Ref<MediaElementAudioSourceNode>> MediaElementAudioSourceNode::creat
         return Exception { ExceptionCode::InvalidStateError, "Media element is already associated with an audio source node"_s };
 
     auto node = adoptRef(*new MediaElementAudioSourceNode(context, *options.mediaElement));
+    // call the text generator's version of create - no longer persuing this
 
     options.mediaElement->setAudioSourceNode(node.ptr());
+    // set the media element's synthesized text audio node -- happens in media element
 
     // context keeps reference until node is disconnected.
     context.sourceNodeWillBeginPlayback(node);
+    // call this function for our synthesized text audio node - they are the same node; no need
+
 
     return node;
 }
@@ -77,6 +81,7 @@ MediaElementAudioSourceNode::MediaElementAudioSourceNode(BaseAudioContext& conte
 
 MediaElementAudioSourceNode::~MediaElementAudioSourceNode()
 {
+    // TODO: Finalize text synthesis.
     m_mediaElement->setAudioSourceNode(nullptr);
     uninitialize();
 }
@@ -116,13 +121,22 @@ void MediaElementAudioSourceNode::setFormat(size_t numberOfChannels, float sourc
 
             // Do any necesssary re-configuration to the output's number of channels.
             output(0)->setNumberOfChannels(numberOfChannels);
+            // TODO: Perhaps destroy any existing text synthesis info struct.
+            // Q: Why/When would reconfiguration happen?
         }
     }
+    
+    // TODO: Create ASBD for text synthesis. Add to header, potentially into a sythesis info struct. see "AudioSourceProviderAVFObjC::prepare"
+    // is this reasonable?
+    
+    // TODO: Prepare for synthesis. Add a synthesis options struct as an ivar.
+
 }
 
 void MediaElementAudioSourceNode::provideInput(AudioBus* bus, size_t framesToProcess)
 {
     ASSERT(bus);
+    // EDIT: should this be a refptr? The abstract base class doesn't implement ref/deref but i think all the kids do
     if (auto* provider = mediaElement().audioSourceProvider())
         provider->provideInput(bus, framesToProcess);
     else {
@@ -167,9 +181,16 @@ void MediaElementAudioSourceNode::process(size_t numberOfFrames)
         // Bypass the resampler completely if the source is at the context's sample-rate.
         ASSERT(m_sourceSampleRate == sampleRate());
         provideInput(outputBus, numberOfFrames);
+        // Q: who has access to this bus?
+        // Q: how would I get the contents of the bus? is it possisble convert to an AudioBufferList?
+        // Q: access this bus wouldn't negatively impact audio render right?
+        // Q: why would there be contention? are multiple threads accessing the audio/ring buffer
+        // Q: what objects are ref-counted ?
     }
 }
 
 } // namespace WebCore
 
+
+// TODO: Add text synthesis helper functions.
 #endif // ENABLE(WEB_AUDIO)

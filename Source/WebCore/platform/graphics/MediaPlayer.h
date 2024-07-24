@@ -602,6 +602,10 @@ public:
 
 #if ENABLE(WEB_AUDIO)
     AudioSourceProvider* audioSourceProvider();
+    
+//#if HAVE(SPEECHRECOGNIZER)
+//    AudioSourceProvider* synthesizedTextAudioSourceProvider();
+//#endif
 #endif
 
 #if ENABLE(LEGACY_ENCRYPTED_MEDIA)

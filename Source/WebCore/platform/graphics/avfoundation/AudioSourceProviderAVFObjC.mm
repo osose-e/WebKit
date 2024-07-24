@@ -358,6 +358,7 @@ void AudioSourceProviderAVFObjC::process(MTAudioProcessingTapRef tap, CMItemCoun
 
     CMItemCount itemCount = 0;
     CMTimeRange rangeOut;
+    // look at what we do when we get data from a mic 
     OSStatus status = PAL::MTAudioProcessingTapGetSourceAudio(tap, numberOfFrames, bufferListInOut, flagsOut, &rangeOut, &itemCount);
     if (status != noErr || !itemCount)
         return;

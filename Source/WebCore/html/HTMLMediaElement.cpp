@@ -6020,7 +6020,15 @@ void HTMLMediaElement::mediaPlayerDidInitializeMediaEngine() WTF_IGNORES_THREAD_
     if (RefPtr audioSourceNode = m_audioSourceNode.get()) {
         if (auto* provider = audioSourceProvider())
             provider->setClient(audioSourceNode.get());
-
+        
+//#if HAVE(SPEECHRECOGNIZER)
+//    // Here, we have a second audioSourceProvider specifically for text synthesis.
+//    // This audio provider will have the same audioSourceNode as its client. 
+//    // Two different providers, one client.
+//        if (auto* syntheticTextProvider = synthesizedTextAudioSourceProvider())
+//            syntheticTextProvider->setClient(audioSourceNode.get());
+//#endif
+        
         audioSourceNode->processLock().unlock();
     }
 #endif
@@ -7848,6 +7856,10 @@ void HTMLMediaElement::setAudioSourceNode(MediaElementAudioSourceNode* sourceNod
 
     if (audioSourceProvider())
         audioSourceProvider()->setClient(m_audioSourceNode.get());
+//#if HAVE(SPEECHRECOGNIZER)
+//    if (synthesizedTextAudioSourceProvider())
+//        synthesizedTextAudioSourceProvider()->setClient(m_audioSourceNode.get());
+//#endif
 }
 
 // This may get called on the audio thread by MediaElementAudioSourceNode.
@@ -7859,7 +7871,17 @@ AudioSourceProvider* HTMLMediaElement::audioSourceProvider()
     return nullptr;
 }
 
-#endif
+//#if HAVE(SPEECHRECOGNIZER)
+//AudioSourceProvider* HTMLMediaElement::synthesizedTextAudioSourceProvider()
+//{
+//    if (m_player)
+//        return m_player->synthesizedTextAudioSourceProvider();
+//
+//    return nullptr;
+//}
+//#endif
+
+#endif // ENABLE(WEB_AUDIO)
 
 const String& HTMLMediaElement::mediaGroup() const
 {
