@@ -85,7 +85,7 @@ AudioSourceProviderAVFObjC::~AudioSourceProviderAVFObjC()
     // commits. https://bugs.webkit.org/show_bug.cgi?id=224480
     setClient(nullptr);
 }
-
+// allegedly this is the tap theres all sorts of stuff here 
 void AudioSourceProviderAVFObjC::provideInput(AudioBus* bus, size_t framesToProcess)
 {
     // Protect access to m_ringBuffer by using tryLock(). If we failed
@@ -316,7 +316,14 @@ void AudioSourceProviderAVFObjC::prepare(CMItemCount maxFrames, const AudioStrea
     m_outputDescription->mBytesPerPacket = sizeof(Float32);
     m_outputDescription->mBytesPerFrame = sizeof(Float32);
     m_outputDescription->mFormatFlags |= kAudioFormatFlagIsNonInterleaved;
-
+// do the above in sythesizedTextGenerator re-implementation
+#if ENABLE(AUTOMATIC_LIVE_CAPTIONING)
+    // prepare
+    m_synthesizedTextGenerator = SynthesizedTextGenerator();
+    m_synthesizedTextGenerator->addFormat(*processingFormat);
+    m_synthesizedTextGenerator->start();
+#endif
+    
     if (*m_tapDescription != *m_outputDescription) {
         AudioConverterRef outConverter = nullptr;
         PAL::AudioConverterNew(m_tapDescription.get(), m_outputDescription.get(), &outConverter);
@@ -403,6 +410,9 @@ void AudioSourceProviderAVFObjC::process(MTAudioProcessingTapRef tap, CMItemCoun
         m_seekTo = endFrame;
 
     m_ringBuffer->store(bufferListInOut, itemCount, endFrame);
+#if ENABLE(AUTOMATIC_LIVE_CAPTIONING)
+    // process
+#endif
 
     // Mute the default audio playback by zeroing the tap-owned buffers.
     for (uint32_t i = 0; i < bufferListInOut->mNumberBuffers; ++i) {

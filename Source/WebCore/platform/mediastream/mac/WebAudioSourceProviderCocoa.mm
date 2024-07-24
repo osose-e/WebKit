@@ -57,6 +57,14 @@ WebAudioSourceProviderCocoa::~WebAudioSourceProviderCocoa()
 
 void WebAudioSourceProviderCocoa::setClient(WeakPtr<AudioSourceProviderClient>&& client)
 {
+#if ENABLE(AUTOMATIC_LIVE_CAPTIONING)
+    if (!client && m_synthesizedTextGenerator) {
+        m_synthesizedTextGenerator->stop();
+        m_synthesizedTextGenerator = nullptr;
+        
+    }
+#endif
+    
     if (m_client == client)
         return;
     m_client = WTFMove(client);
@@ -99,6 +107,12 @@ void WebAudioSourceProviderCocoa::provideInput(AudioBus* bus, size_t framesToPro
 
     ASSERT(framesToProcess <= bus->length());
     m_dataSource->pullSamples(*m_audioBufferList->list(), framesToProcess, m_readCount, 0, AudioSampleDataSource::Copy);
+    
+#if ENABLE(AUTOMATIC_LIVE_CAPTIONING)
+    auto bufferListSamples = m_audioBufferList->list();
+    m_synthesizedTextGenerator->process(bufferListSamples);
+#endif
+    
     m_readCount += framesToProcess;
 }
 
@@ -122,6 +136,12 @@ void WebAudioSourceProviderCocoa::prepare(const AudioStreamBasicDescription& for
     const bool isNonInterleaved = true;
     AudioStreamBasicDescription outputDescription { };
     FillOutASBDForLPCM(outputDescription, sampleRate, numberOfChannels, bitsPerByte * bytesPerFloat, bitsPerByte * bytesPerFloat, isFloat, isBigEndian, isNonInterleaved);
+    
+#if ENABLE(AUTOMATIC_LIVE_CAPTIONING)
+    m_synthesizedTextGenerator->addFormat(&outputDescription);
+    m_synthesizedTextGenerator->start();
+#endif
+    
     m_outputDescription = CAAudioStreamDescription(outputDescription);
     m_audioBufferList = makeUnique<WebAudioBufferList>(m_outputDescription.value());
 

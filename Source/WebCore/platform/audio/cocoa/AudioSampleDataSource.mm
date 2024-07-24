@@ -193,6 +193,7 @@ void AudioSampleDataSource::pushSamples(const MediaTime& sampleTime, const Platf
 }
 
 bool AudioSampleDataSource::pullSamples(AudioBufferList& buffer, size_t sampleCount, uint64_t timeStamp, double /*hostTime*/, PullMode mode)
+// allegedy i can pull samples here
 {
     size_t byteCount = sampleCount * m_outputDescription->bytesPerFrame();
 
@@ -227,6 +228,7 @@ bool AudioSampleDataSource::pullSamples(AudioBufferList& buffer, size_t sampleCo
     }
 
     timeStamp += m_outputSampleOffset;
+    // this is where to add samples
 
     if (timeStamp < startFrame || timeStamp + sampleCount > endFrame) {
         if (!m_isInNeedOfMoreData) {

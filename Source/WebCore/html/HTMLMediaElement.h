@@ -528,6 +528,19 @@ public:
 //    void setSynthesizedTextAudioSourceNode(MediaElementAudioSourceNode*);
 //#endif
 #endif
+    
+#if ENABLE(AUTOMATIC_LIVE_CAPTIONING)
+    // synthesizedTextGenerator
+    // better level is this level, so that the generator client of audiosourceprovider is an audioSourceProviderClient
+    // Will generate my own asbd
+    // Will have a timer that spins + asks the provider to fill an audioBus, which will create samples for the speech recognizer
+    
+    // recognizer should inherit from the audioSourceProviderClient, and setformat will get a sample rate and ... and using info from AVFOBjC will have the info on how to create asbd
+    
+    // provide input would fill an audio bus + # samples (if you ask for too many you get silence) for you then you need to use teh bus and turn into audiobufferlist that is ready for speech recognition
+    // provide input give the number of samples in your buffer --> so you can ask for samples that are available
+    // don't hit pause :)
+#endif
 
     using HTMLMediaElementEnums::InvalidURLAction;
     bool isSafeToLoadURL(const URL&, InvalidURLAction, bool shouldLog = true) const;
@@ -1303,6 +1316,11 @@ private:
 
     bool m_requireCaptionPreferencesChangedCallbacks { false };
 
+#if ENABLE(AUTOMATIC_LIVE_CAPTIONING)
+    // This is a weak reference, pointing to the same data as m_audioSourceNode
+    WeakPtr<MediaElementAudioSourceNode, WeakPtrImplWithEventTargetData> m_synthesizedTextAudioSourceNode;
+#endif
+    
 #if ENABLE(WEB_AUDIO)
     // This is a weak reference, since m_audioSourceNode holds a reference to us.
     // The value is set just after the MediaElementAudioSourceNode is created.

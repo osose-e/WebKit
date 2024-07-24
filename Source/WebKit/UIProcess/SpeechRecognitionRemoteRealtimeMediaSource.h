@@ -45,7 +45,7 @@ class WebAudioBufferList;
 
 namespace WebKit {
 class SpeechRecognitionRemoteRealtimeMediaSourceManager;
-    
+    // potentially extend this here 
 class SpeechRecognitionRemoteRealtimeMediaSource : public WebCore::RealtimeMediaSource, public ThreadSafeRefCountedAndCanMakeThreadSafeWeakPtr<SpeechRecognitionRemoteRealtimeMediaSource, WTF::DestructionThread::MainRunLoop> {
 public:
     static Ref<WebCore::RealtimeMediaSource> create(SpeechRecognitionRemoteRealtimeMediaSourceManager&, const WebCore::CaptureDevice&, WebCore::PageIdentifier);

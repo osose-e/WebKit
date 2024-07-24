@@ -28,6 +28,11 @@
 #if ENABLE(WEB_AUDIO)
 
 #include "CAAudioStreamDescription.h"
+
+#if ENABLE(AUTOMATIC_LIVE_CAPTIONING)
+#include "SynthesizedTextGenerator.h"
+#endif
+
 #include "WebAudioSourceProvider.h"
 #include <CoreAudio/CoreAudioTypes.h>
 #include <wtf/Lock.h>
@@ -81,10 +86,18 @@ private:
     std::optional<CAAudioStreamDescription> m_outputDescription;
     std::unique_ptr<WebAudioBufferList> m_audioBufferList;
     RefPtr<AudioSampleDataSource> m_dataSource;
+        
+#if ENABLE(AUTOMATIC_LIVE_CAPTIONING)
+    RefPtr<SynthesizedTextGenerator> m_synthesizedTextGenerator; // c++ vs obj c
+        // this is only for media stream --> most videos don't use media stream
+        // move this ivar into html media element
+#endif
 
     size_t m_pollSamplesCount { 3 };
     uint64_t m_writeCount { 0 };
     uint64_t m_readCount { 0 };
+
+
 };
 
 inline void WebAudioSourceProviderCocoa::setPollSamplesCount(size_t count)

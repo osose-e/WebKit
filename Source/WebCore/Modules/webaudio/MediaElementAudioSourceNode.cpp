@@ -132,6 +132,9 @@ void MediaElementAudioSourceNode::setFormat(size_t numberOfChannels, float sourc
     // TODO: Prepare for synthesis. Add a synthesis options struct as an ivar.
 
 }
+// media toolbox
+// you can just make your own audiosourcenode from the media element
+// fingers crossed it works// tap no work on hls bc of the tap no wor on hls
 
 void MediaElementAudioSourceNode::provideInput(AudioBus* bus, size_t framesToProcess)
 {
@@ -139,6 +142,7 @@ void MediaElementAudioSourceNode::provideInput(AudioBus* bus, size_t framesToPro
     // EDIT: should this be a refptr? The abstract base class doesn't implement ref/deref but i think all the kids do
     if (auto* provider = mediaElement().audioSourceProvider())
         provider->provideInput(bus, framesToProcess);
+    // here :)
     else {
         // Either this port doesn't yet support HTMLMediaElement audio stream access,
         // or the stream is not yet available.
@@ -173,6 +177,9 @@ void MediaElementAudioSourceNode::process(size_t numberOfFrames)
         outputBus->zero();
         return;
     }
+    
+    // this is where i get the text generator off our media element. and feed stuff to it
+    
 
     if (m_multiChannelResampler) {
         ASSERT(m_sourceSampleRate != sampleRate());

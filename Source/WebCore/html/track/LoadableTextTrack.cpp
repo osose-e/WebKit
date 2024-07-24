@@ -98,6 +98,8 @@ void LoadableTextTrack::scheduleLoad(const URL& url)
     });
 }
 
+
+// this is interesting hehe
 void LoadableTextTrack::newCuesAvailable(TextTrackLoader& loader)
 {
     ASSERT_UNUSED(loader, m_loader.get() == &loader);
