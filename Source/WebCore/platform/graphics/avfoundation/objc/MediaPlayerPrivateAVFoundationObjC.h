@@ -407,6 +407,11 @@ private:
 
 #if ENABLE(WEB_AUDIO) && USE(MEDIATOOLBOX)
     RefPtr<AudioSourceProviderAVFObjC> m_provider;
+    
+//#if HAVE(SPEECHRECOGNIZER)
+//    RefPtr<AudioSourceProviderAVFObjC> m_synthesizedTextProvider;
+//#endif
+    
 #endif
 
     RetainPtr<AVAssetImageGenerator> m_imageGenerator;

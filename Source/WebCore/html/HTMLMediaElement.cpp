@@ -4987,6 +4987,13 @@ MediaElementAudioSourceNode* HTMLMediaElement::audioSourceNode()
 }
 #endif
 
+#if ENABLE(AUTOMATIC_LIVE_CAPTIONING)
+MediaElementAudioSourceNode* HTMLMediaElement::synthesizedTextAudioSourceNode()
+{
+    return m_synthesizedTextAudioSourceNode.get();
+}
+#endif
+
 ExceptionOr<Ref<TextTrack>> HTMLMediaElement::addTextTrack(const AtomString& kind, const AtomString& label, const AtomString& language)
 {
     // 4.8.10.12.4 Text track API
@@ -5416,6 +5423,20 @@ void HTMLMediaElement::configureTextTracks()
     TrackGroup otherTracks(TrackGroup::Other);
 
     if (!m_textTracks)
+        // TODO: auto generate?
+        // is the dom parsed to initialize this initially?
+        // maybe have a autogentexttrack ?
+            // that inherits texttrack & and maybe it starts out empty/ without any cues?
+        // is the text track read or parsed?
+        // can the cue list be added to as it's read? where is information from the cue list taken to be displayed
+        // https://developer.mozilla.org/en-US/docs/Web/API/WebVTT_API
+        // we can have many tracks
+        // if there is an audio track in a bad lang, and an audio track in a good language and the text track selection is set to automatic, we will just show subtitles. we want to turn on subs automatically if teh device is muted
+        // how do we make this work when the website generates their own subtitles? create a text track set the lang to users lanaguge and call it synthesized text track. then let the user pick it
+        // don't worry about the case where the website has their own captions
+        // nbase case is that there is a media element, and then when audio is detected/ speech is detected it adds to a subtitle track
+        // will only work with mp4 not media source. we have an audio tap with web audio. get it to work with a flat file is easier . html media element level tap
+        // media audio sourcenode
         return;
 
     for (size_t i = 0; i < m_textTracks->length(); ++i) {
@@ -6020,7 +6041,15 @@ void HTMLMediaElement::mediaPlayerDidInitializeMediaEngine() WTF_IGNORES_THREAD_
     if (RefPtr audioSourceNode = m_audioSourceNode.get()) {
         if (auto* provider = audioSourceProvider())
             provider->setClient(audioSourceNode.get());
-
+        
+//#if HAVE(SPEECHRECOGNIZER)
+//    // Here, we have a second audioSourceProvider specifically for text synthesis.
+//    // This audio provider will have the same audioSourceNode as its client. 
+//    // Two different providers, one client.
+//        if (auto* syntheticTextProvider = synthesizedTextAudioSourceProvider())
+//            syntheticTextProvider->setClient(audioSourceNode.get());
+//#endif
+        
         audioSourceNode->processLock().unlock();
     }
 #endif
@@ -7742,6 +7771,9 @@ CaptionUserPreferences::CaptionDisplayMode HTMLMediaElement::captionDisplayMode(
 void HTMLMediaElement::markCaptionAndSubtitleTracksAsUnconfigured(ReconfigureMode mode)
 {
     if (!m_textTracks)
+        // TODO: generate automatic captions ??
+        // Is there a case where a text track exists but the website also displays their own captions?
+        // Do I want to be creating my own text track? Don't text tracks have some kind of timing information?
         return;
 
     INFO_LOG(LOGIDENTIFIER);
@@ -7759,6 +7791,7 @@ void HTMLMediaElement::markCaptionAndSubtitleTracksAsUnconfigured(ReconfigureMod
     }
 
     m_processingPreferenceChange = true;
+    // ???
     m_configureTextTracksTaskCancellationGroup.cancel();
     if (mode == Immediately) {
         Ref protectedThis { *this }; // configureTextTracks calls methods that can trigger arbitrary DOM mutations.
@@ -7776,6 +7809,7 @@ void HTMLMediaElement::createMediaPlayer() WTF_IGNORES_THREAD_SAFETY_ANALYSIS
 
     mediaSession().setActive(true);
 
+    // audio source nodee
 #if ENABLE(WEB_AUDIO)
     RefPtr protectedAudioSourceNode = m_audioSourceNode.get();
     std::optional<Locker<Lock>> audioSourceNodeLocker;
@@ -7845,9 +7879,16 @@ void HTMLMediaElement::createMediaPlayer() WTF_IGNORES_THREAD_SAFETY_ANALYSIS
 void HTMLMediaElement::setAudioSourceNode(MediaElementAudioSourceNode* sourceNode)
 {
     m_audioSourceNode = sourceNode;
+#if ENABLE(AUTOMATIC_LIVE_CAPTIONING)
+    m_synthesizedTextAudioSourceNode = sourceNode;
+#endif
 
     if (audioSourceProvider())
         audioSourceProvider()->setClient(m_audioSourceNode.get());
+//#if HAVE(SPEECHRECOGNIZER)
+//    if (synthesizedTextAudioSourceProvider())
+//        synthesizedTextAudioSourceProvider()->setClient(m_audioSourceNode.get());
+//#endif
 }
 
 // This may get called on the audio thread by MediaElementAudioSourceNode.
@@ -7859,7 +7900,17 @@ AudioSourceProvider* HTMLMediaElement::audioSourceProvider()
     return nullptr;
 }
 
-#endif
+//#if HAVE(SPEECHRECOGNIZER)
+//AudioSourceProvider* HTMLMediaElement::synthesizedTextAudioSourceProvider()
+//{
+//    if (m_player)
+//        return m_player->synthesizedTextAudioSourceProvider();
+//
+//    return nullptr;
+//}
+//#endif
+
+#endif // ENABLE(WEB_AUDIO)
 
 const String& HTMLMediaElement::mediaGroup() const
 {
@@ -9049,7 +9100,7 @@ void HTMLMediaElement::updateMediaState()
 
     protectedDocument()->updateIsPlayingMedia();
 }
-
+// media state will show if playing and if has audio? 
 MediaProducerMediaStateFlags HTMLMediaElement::mediaState() const
 {
     MediaStateFlags state;

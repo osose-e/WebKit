@@ -206,6 +206,7 @@ Vector<String> CaptionUserPreferences::preferredAudioCharacteristics() const
     return characteristics;
 }
 
+// hmm i may need to be up in here too then
 static String trackDisplayName(TextTrack* track)
 {
     if (track == &TextTrack::captionMenuOffItem())

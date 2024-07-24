@@ -42,3 +42,5 @@ struct SpeechRecognitionRequestInfo {
 };
 
 } // namespace WebCore
+
+// audio capture and then to speech recognition, system framework 

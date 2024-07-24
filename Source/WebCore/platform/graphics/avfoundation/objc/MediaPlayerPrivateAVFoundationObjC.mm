@@ -567,6 +567,12 @@ void MediaPlayerPrivateAVFoundationObjC::cancelLoad()
         m_provider->setPlayerItem(nullptr);
         m_provider->setAudioTrack(nullptr);
     }
+//#if HAVE(SPEECHRECOGNIZER)
+//    if (m_synthesizedTextProvider) {
+//        m_synthesizedTextProvider->setPlayerItem(nullptr);
+//        m_synthesizedTextProvider->setAudioTrack(nullptr);
+//    }
+//#endif
 #endif
 
     setIgnoreLoadStateChanges(false);
@@ -2643,6 +2649,17 @@ AudioSourceProvider* MediaPlayerPrivateAVFoundationObjC::audioSourceProvider()
     }
     return m_provider.get();
 }
+
+//#if HAVE(SPEECHRECOGNIZER)
+//AudioSourceProvider* MediaPlayerPrivateAVFoundationObjC::synthesizedTextAudioSourceProvider()
+//{
+//    if (!m_synthesizedTextProvider) {
+//        m_synthesizedTextProvider = AudioSourceProviderAVFObjC::create(m_avPlayerItem.get());
+//        m_synthesizedTextProvider->setAudioTrack(firstEnabledAudibleTrack());
+//    }
+//    return m_synthesizedTextProvider.get();
+//}
+//#endif
 
 #endif
 

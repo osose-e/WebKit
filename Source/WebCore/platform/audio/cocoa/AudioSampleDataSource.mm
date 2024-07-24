@@ -184,13 +184,16 @@ void AudioSampleDataSource::pushSamples(const AudioStreamBasicDescription& sampl
     WebAudioBufferList list(*m_inputDescription, sampleBuffer);
     pushSamplesInternal(list, PAL::toMediaTime(PAL::CMSampleBufferGetPresentationTimeStamp(sampleBuffer)), PAL::CMSampleBufferGetNumSamples(sampleBuffer));
 }
-
+// later look at js media file to textrack
+// TODO: new object getting output from speech recognizer & logging (and timestamp)
+// TODO: pt2 create cues and track
 void AudioSampleDataSource::pushSamples(const MediaTime& sampleTime, const PlatformAudioData& audioData, size_t sampleCount)
 {
     pushSamplesInternal(*downcast<WebAudioBufferList>(audioData).list(), sampleTime, sampleCount);
 }
 
 bool AudioSampleDataSource::pullSamples(AudioBufferList& buffer, size_t sampleCount, uint64_t timeStamp, double /*hostTime*/, PullMode mode)
+// allegedy i can pull samples here
 {
     size_t byteCount = sampleCount * m_outputDescription->bytesPerFrame();
 
@@ -225,6 +228,7 @@ bool AudioSampleDataSource::pullSamples(AudioBufferList& buffer, size_t sampleCo
     }
 
     timeStamp += m_outputSampleOffset;
+    // this is where to add samples
 
     if (timeStamp < startFrame || timeStamp + sampleCount > endFrame) {
         if (!m_isInNeedOfMoreData) {

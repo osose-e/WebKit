@@ -98,7 +98,8 @@ void SpeechRecognizer::start(Ref<RealtimeMediaSource>&& source, bool mockSpeechR
     m_delegateCallback(SpeechRecognitionUpdate::create(clientIdentifier(), SpeechRecognitionUpdateType::Start));
     startCapture(WTFMove(source));
 }
-
+// TODO: different start using a tap wrapper or something similar
+// set bp in this code, and use web speech api to understand how msg flow
 void SpeechRecognizer::startCapture(Ref<RealtimeMediaSource>&& source)
 {
     auto dataCallback = [weakThis = WeakPtr { *this }](const auto& time, const auto& data, const auto& description, auto sampleCount) {

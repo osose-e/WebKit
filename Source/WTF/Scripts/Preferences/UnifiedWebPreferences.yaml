@@ -696,6 +696,21 @@ AuthorAndUserStylesEnabled:
     WebCore:
       default: true
 
+AutomaticLiveCaptioningEnabled:
+  type: bool
+  status: unstable
+  category: media
+  humanReadableName: "Live Caption Generation for Video"
+  humanReadableDescription: "Enables live, automically-generated captions for video"
+  condition: ENABLE(VIDEO)
+  defaultValue:
+    WebKitLegacy:
+      default: false
+    WebKit:
+      default: false
+    WebCore:
+      default: false
+      
 AutomaticLiveResizeEnabled:
   type: bool
   status: internal

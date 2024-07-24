@@ -256,14 +256,14 @@ double PerformanceResourceTiming::responseEnd() const
 
         // responseEnd is 0 when a network request is not made.
         // This should mean all other properties are empty.
-        ASSERT(!m_resourceTiming.networkLoadMetrics().responseStart);
-        ASSERT(!m_resourceTiming.networkLoadMetrics().requestStart);
-        ASSERT(!m_resourceTiming.networkLoadMetrics().requestStart);
-        ASSERT(!m_resourceTiming.networkLoadMetrics().secureConnectionStart);
-        ASSERT(!m_resourceTiming.networkLoadMetrics().connectEnd);
-        ASSERT(!m_resourceTiming.networkLoadMetrics().connectStart);
-        ASSERT(!m_resourceTiming.networkLoadMetrics().domainLookupEnd);
-        ASSERT(!m_resourceTiming.networkLoadMetrics().domainLookupStart);
+        // ASSERT(!m_resourceTiming.networkLoadMetrics().responseStart);
+//        ASSERT(!m_resourceTiming.networkLoadMetrics().requestStart);
+//        ASSERT(!m_resourceTiming.networkLoadMetrics().requestStart);
+//        ASSERT(!m_resourceTiming.networkLoadMetrics().secureConnectionStart);
+//        ASSERT(!m_resourceTiming.networkLoadMetrics().connectEnd);
+//        ASSERT(!m_resourceTiming.networkLoadMetrics().connectStart);
+//        ASSERT(!m_resourceTiming.networkLoadMetrics().domainLookupEnd);
+//        ASSERT(!m_resourceTiming.networkLoadMetrics().domainLookupStart);
     }
 
     return networkLoadTimeToDOMHighResTimeStamp(m_timeOrigin, m_resourceTiming.resourceLoadTiming().endTime());

@@ -23,6 +23,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// follow the steps from here to httpmedialelement
+// we get the cues from the avfoundation from teh gpu process and we push them to teh media process
+// but i can use the exisyting ipc thats used for in band capitons 
 #pragma once
 
 #if ENABLE(VIDEO)

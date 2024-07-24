@@ -27,6 +27,11 @@
 
 #if ENABLE(WEB_AUDIO) && USE(MEDIATOOLBOX)
 
+#if ENABLE(AUTOMATIC_LIVE_CAPTIONING)
+#import "SynthesizedTextGenerator.h"
+#endif
+
+
 #include "AudioSourceProvider.h"
 #include <wtf/MediaTime.h>
 #include <wtf/RetainPtr.h>
@@ -99,6 +104,11 @@ private:
     std::unique_ptr<AudioStreamBasicDescription> m_tapDescription;
     std::unique_ptr<AudioStreamBasicDescription> m_outputDescription;
     std::unique_ptr<CARingBuffer> m_ringBuffer;
+    
+#if ENABLE(AUTOMATIC_LIVE_CAPTIONING)
+    RetainPtr<SynthesizedTextGenerator> m_synthesizedTextGenerator;
+    
+#endif
 
     MediaTime m_startTimeAtLastProcess;
     MediaTime m_endTimeAtLastProcess;

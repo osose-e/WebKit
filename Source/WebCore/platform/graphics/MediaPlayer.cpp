@@ -1506,7 +1506,14 @@ AudioSourceProvider* MediaPlayer::audioSourceProvider()
     return m_private->audioSourceProvider();
 }
 
-#endif
+//#if HAVE(SPEECHRECOGNIZER)
+//AudioSourceProvider* MediaPlayer::synthesizedTextAudioSourceProvider()
+//{
+//    return m_private->synthesizedTextAudioSourceProvider();
+//}
+//#endif
+
+#endif // ENABLE(WEB_AUDIO)
 
 #if ENABLE(LEGACY_ENCRYPTED_MEDIA)
 

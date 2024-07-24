@@ -2232,6 +2232,8 @@ void WebProcessProxy::createSpeechRecognitionServer(SpeechRecognitionServerIdent
     };
 
 #if ENABLE(MEDIA_STREAM)
+    // here, get media source and then create server
+    // maybe no need to forward back results
     auto createRealtimeMediaSource = [weakPage = WeakPtr { targetPage }]() {
         return weakPage ? weakPage->createRealtimeMediaSourceForSpeechRecognition() : CaptureSourceOrError { { "Page is invalid"_s, WebCore::MediaAccessDenialReason::InvalidAccess } };
     };

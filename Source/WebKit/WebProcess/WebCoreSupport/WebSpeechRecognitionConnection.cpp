@@ -22,7 +22,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+// from speech recognizer
 #include "config.h"
 #include "WebSpeechRecognitionConnection.h"
 
@@ -42,7 +42,7 @@ Ref<WebSpeechRecognitionConnection> WebSpeechRecognitionConnection::create(Speec
 {
     return adoptRef(*new WebSpeechRecognitionConnection(identifier));
 }
-
+// search for the message name and then this should be the ui process sending back
 WebSpeechRecognitionConnection::WebSpeechRecognitionConnection(SpeechRecognitionConnectionIdentifier identifier)
     : m_identifier(identifier)
 {

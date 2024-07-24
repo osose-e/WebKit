@@ -261,6 +261,10 @@ public:
 
 #if ENABLE(WEB_AUDIO)
     virtual AudioSourceProvider* audioSourceProvider() { return 0; }
+    
+//#if HAVE(SPEECHRECOGNIZER)
+//    virtual AudioSourceProvider* synthesizedTextAudioSourceProvider() { return 0; }
+//#endif
 #endif
 
 #if ENABLE(LEGACY_ENCRYPTED_MEDIA)
