@@ -30,6 +30,7 @@
 #include "AudioSourceProvider.h"
 #include <wtf/MediaTime.h>
 #include <wtf/RetainPtr.h>
+
 #include <wtf/ThreadSafeRefCounted.h>
 #include <wtf/TypeCasts.h>
 #include <wtf/UniqueRef.h>
@@ -38,6 +39,13 @@
 OBJC_CLASS AVAssetTrack;
 OBJC_CLASS AVPlayerItem;
 OBJC_CLASS AVMutableAudioMix;
+OBJC_CLASS AVAudioFormat;
+OBJC_CLASS AVAudioPCMBuffer;
+OBJC_CLASS SFSpeechAudioBufferRecognitionRequest;
+OBJC_CLASS SFSpeechRecognizer;
+OBJC_CLASS SFSpeechRecognitionTask;
+OBJC_CLASS WebSynthesizedTextGeneratorRequestDelegate;
+
 
 typedef const struct opaqueMTAudioProcessingTap *MTAudioProcessingTapRef;
 typedef struct AudioBufferList AudioBufferList;
@@ -53,7 +61,7 @@ class CAAudioStreamDescription;
 class CARingBuffer;
 class PlatformAudioData;
 
-class AudioSourceProviderAVFObjC : public ThreadSafeRefCounted<AudioSourceProviderAVFObjC>, public AudioSourceProvider {
+class AudioSourceProviderAVFObjC : public ThreadSafeRefCountedAndCanMakeThreadSafeWeakPtr<AudioSourceProviderAVFObjC>, public AudioSourceProvider {
 public:
     using WeakValueType = AudioSourceProviderAVFObjC;
     static RefPtr<AudioSourceProviderAVFObjC> create(AVPlayerItem*);
@@ -68,6 +76,14 @@ public:
     WEBCORE_EXPORT void setConfigureAudioStorageCallback(ConfigureAudioStorageCallback&&);
 
     void recreateAudioMixIfNeeded();
+
+#if ENABLE(VIDEO)
+    using CaptionCreationTask = Function<void(NSString *, const MediaTime start, const MediaTime end)>;
+    void beginVideoTranscription(PartialCaptionCreationTask&& createCompletionHandler, PartialCaptionCreationTask&& updateCompletionHandler, CompletedCaptionCreationTask&&) override;
+//    CaptionCreationTask m_task;
+//    CaptionCreationTask captionCreationTask() const { return m_task; }
+//    void endVideoTranscription();
+#endif
 
 private:
     AudioSourceProviderAVFObjC(AVPlayerItem *);
@@ -99,6 +115,50 @@ private:
     std::unique_ptr<AudioStreamBasicDescription> m_tapDescription;
     std::unique_ptr<AudioStreamBasicDescription> m_outputDescription;
     std::unique_ptr<CARingBuffer> m_ringBuffer;
+    
+#if ENABLE(VIDEO)
+    RetainPtr<SFSpeechRecognizer> m_generator;
+    RetainPtr<AVAudioFormat> m_audioProcessingFormat;
+    
+    RetainPtr<SFSpeechAudioBufferRecognitionRequest> m_samplesBuffer;
+    RetainPtr<SFSpeechRecognitionTask> m_generatorRecogitionTask;
+    RetainPtr<WebSynthesizedTextGeneratorRequestDelegate> m_generatorRecognitionTaskDelegate;
+    MediaTime m_startTimeForTranscriptionTask;
+    
+    
+    bool m_transcriptionGeneratorInUse;
+//    CaptionCreationTask m_task;
+
+    RetainPtr<SFSpeechAudioBufferRecognitionRequest> m_previousSamplesBuffer;
+    RetainPtr<SFSpeechRecognitionTask> m_previousGeneratorRecogitionTask;
+    RetainPtr<WebSynthesizedTextGeneratorRequestDelegate> m_previousGeneratorRecognitionTaskDelegate;
+    MediaTime m_startTimeForFirstUtterance;
+
+    
+//
+//    
+//    void flushVideoTransciptionBuffer();
+//    void prepareVideoTranscriptionTask();
+//    void beginVideoTranscription();
+    
+    
+        // make generator, set to generator in use, set lambda
+    
+    // do I use this? it should probably be an atomString
+    // store finishingbuffer &  finishingbufferstarttime
+    // store currentbuffer & currentbufferstarttime
+    // duration will be 4 secs
+    // currentbuffer
+    // when we get final transcription for a buffer
+    // if we fill a curr 5 sec buffer, call end audio, add to a finishing transcription buffer + finishing start time and add all new samples to a fresh curr buffer
+    // when we get a final transcription for a buffer
+        // pass text and finsihing start time to texttrack
+        // set finsihing buffer to nil / keep finishing start time unchanged
+
+    // save time as buffer start time
+    // what does seeking do (maybe if time is not within 4 sec flush the buffer and start a new one
+        // if we seeked, cancel finsihing buffer, set to nil, and cancel current buffer, create a fresh current
+#endif
 
     MediaTime m_startTimeAtLastProcess;
     MediaTime m_endTimeAtLastProcess;

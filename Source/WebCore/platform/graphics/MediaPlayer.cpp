@@ -1508,6 +1508,18 @@ AudioSourceProvider* MediaPlayer::audioSourceProvider()
 
 #endif
 
+#if HAVE(SPEECHRECOGNIZER)
+void MediaPlayer::startTranscription()
+{
+    m_private->startTranscription();
+}
+
+void MediaPlayer::endTranscription()
+{
+    m_private->endTranscription();
+}
+#endif
+
 #if ENABLE(LEGACY_ENCRYPTED_MEDIA)
 
 RefPtr<ArrayBuffer> MediaPlayer::cachedKeyForKeyId(const String& keyId) const

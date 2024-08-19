@@ -262,6 +262,15 @@ public:
 #if ENABLE(WEB_AUDIO)
     virtual AudioSourceProvider* audioSourceProvider() { return 0; }
 #endif
+    
+#if HAVE(SPEECHRECOGNIZER)
+    virtual void startTranscription() { };
+    // lowkey how do we end the transcription?
+    // would this simply mean not displaying the transcription results 🌚
+    // because the transcription ends when the tap finalizes LOL
+    virtual void endTranscription() { };
+#endif
+    
 
 #if ENABLE(LEGACY_ENCRYPTED_MEDIA)
     virtual std::unique_ptr<LegacyCDMSession> createSession(const String&, LegacyCDMSessionClient&) { return nullptr; }

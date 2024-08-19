@@ -70,6 +70,7 @@ class CDMSessionAVFoundationObjC;
 class ImageRotationSessionVT;
 class InbandChapterTrackPrivateAVFObjC;
 class InbandMetadataTextTrackPrivateAVF;
+class InbandSynthesizedTextTrackPrivateObjC;
 class MediaPlaybackTarget;
 class MediaSelectionGroupAVFObjC;
 class PixelBufferConformerCV;
@@ -255,6 +256,12 @@ private:
 
 #if ENABLE(WEB_AUDIO) && USE(MEDIATOOLBOX)
     AudioSourceProvider* audioSourceProvider() final;
+#endif
+    
+#if HAVE(SPEECHRECOGNIZER)
+    void startTranscription() final;
+    void endTranscription() final;
+    RefPtr<InbandSynthesizedTextTrackPrivateObjC> m_synthesizedTextTrack;
 #endif
 
     void createImageGenerator();
