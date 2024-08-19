@@ -523,6 +523,11 @@ public:
     void setAudioSourceNode(MediaElementAudioSourceNode*);
 
     AudioSourceProvider* audioSourceProvider();
+    
+//#if HAVE(SPEECHRECOGNIZER)
+//    void startTransciption();
+//    void endTransciption();
+//#endif
 #endif
 
     using HTMLMediaElementEnums::InvalidURLAction;

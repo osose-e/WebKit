@@ -603,6 +603,11 @@ public:
 #if ENABLE(WEB_AUDIO)
     AudioSourceProvider* audioSourceProvider();
 #endif
+    
+#if HAVE(SPEECHRECOGNIZER)
+    void startTranscription();
+    void endTranscription();
+#endif
 
 #if ENABLE(LEGACY_ENCRYPTED_MEDIA)
     RefPtr<ArrayBuffer> cachedKeyForKeyId(const String& keyId) const;

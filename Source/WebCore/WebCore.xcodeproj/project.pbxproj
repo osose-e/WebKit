@@ -2843,6 +2843,8 @@
 		76FC2B0C12370DA0006A991A /* DOMTokenList.h in Headers */ = {isa = PBXBuildFile; fileRef = 76FC2B0912370DA0006A991A /* DOMTokenList.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		7728694F14F8882500F484DC /* EXTTextureFilterAnisotropic.h in Headers */ = {isa = PBXBuildFile; fileRef = 7728694C14F8882500F484DC /* EXTTextureFilterAnisotropic.h */; };
 		7728698414FD9ADA00F484DC /* JSEXTTextureFilterAnisotropic.h in Headers */ = {isa = PBXBuildFile; fileRef = 7728698214FD9ADA00F484DC /* JSEXTTextureFilterAnisotropic.h */; };
+		77753CA12C6157100044215A /* InbandSynthesizedTextTrackPrivateObjC.h in Headers */ = {isa = PBXBuildFile; fileRef = 77753C9E2C6156050044215A /* InbandSynthesizedTextTrackPrivateObjC.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		77753CA22C6157210044215A /* InbandSynthesizedTextTrackPrivateObjC.mm in Sources */ = {isa = PBXBuildFile; fileRef = 77753C9F2C6156900044215A /* InbandSynthesizedTextTrackPrivateObjC.mm */; };
 		7779BD961F32246A00C21417 /* JSVisualViewport.h in Headers */ = {isa = PBXBuildFile; fileRef = 7779BD921F2FDBF700C21417 /* JSVisualViewport.h */; };
 		77A17A7212F28182004E02F6 /* OESVertexArrayObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 77A17A6F12F28182004E02F6 /* OESVertexArrayObject.h */; };
 		77A17A7812F28642004E02F6 /* WebGLVertexArrayObjectOES.h in Headers */ = {isa = PBXBuildFile; fileRef = 77A17A7512F28642004E02F6 /* WebGLVertexArrayObjectOES.h */; };
@@ -13227,6 +13229,8 @@
 		7728694D14F8882500F484DC /* EXTTextureFilterAnisotropic.idl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = EXTTextureFilterAnisotropic.idl; sourceTree = "<group>"; };
 		7728698114FD9ADA00F484DC /* JSEXTTextureFilterAnisotropic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSEXTTextureFilterAnisotropic.cpp; sourceTree = "<group>"; };
 		7728698214FD9ADA00F484DC /* JSEXTTextureFilterAnisotropic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSEXTTextureFilterAnisotropic.h; sourceTree = "<group>"; };
+		77753C9E2C6156050044215A /* InbandSynthesizedTextTrackPrivateObjC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InbandSynthesizedTextTrackPrivateObjC.h; sourceTree = "<group>"; };
+		77753C9F2C6156900044215A /* InbandSynthesizedTextTrackPrivateObjC.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = InbandSynthesizedTextTrackPrivateObjC.mm; sourceTree = "<group>"; };
 		7779BD911F2FDBCE00C21417 /* JSVisualViewport.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = JSVisualViewport.cpp; sourceTree = "<group>"; };
 		7779BD921F2FDBF700C21417 /* JSVisualViewport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSVisualViewport.h; sourceTree = "<group>"; };
 		7779BD931F2FDFCB00C21417 /* VisualViewport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VisualViewport.h; sourceTree = "<group>"; };
@@ -35045,6 +35049,8 @@
 				CD19FEAD1F574B6D000C42FB /* ImageDecoderAVFObjC.mm */,
 				070E2D0E26F15B190014AAC3 /* InbandChapterTrackPrivateAVFObjC.h */,
 				070E2D0C26F15B180014AAC3 /* InbandChapterTrackPrivateAVFObjC.mm */,
+				77753C9E2C6156050044215A /* InbandSynthesizedTextTrackPrivateObjC.h */,
+				77753C9F2C6156900044215A /* InbandSynthesizedTextTrackPrivateObjC.mm */,
 				07AA6B69166D019500D45671 /* InbandTextTrackPrivateAVFObjC.h */,
 				07AA6B6A166D019500D45671 /* InbandTextTrackPrivateAVFObjC.mm */,
 				414598C023C8AD78002B9CC8 /* LocalSampleBufferDisplayLayer.h */,
@@ -39802,6 +39808,7 @@
 				0706A0D9240830A700E93818 /* InbandGenericCueIdentifier.h in Headers */,
 				BE16C59317CFE17200852C04 /* InbandGenericTextTrack.h in Headers */,
 				07E9E12E18F5E2760011A3A4 /* InbandMetadataTextTrackPrivateAVF.h in Headers */,
+				77753CA12C6157100044215A /* InbandSynthesizedTextTrackPrivateObjC.h in Headers */,
 				07941792166E855F009416C2 /* InbandTextTrack.h in Headers */,
 				07941794166EA04E009416C2 /* InbandTextTrackPrivate.h in Headers */,
 				F45EAC822A8AEED2009B986E /* InbandTextTrackPrivate.serialization.in in Headers */,
@@ -44000,6 +44007,7 @@
 				1AC900C31943C0FC008625B5 /* HTTPHeaderNames.cpp in Sources */,
 				CD27AE5122A9868700947FF9 /* ImageRotationSessionVT.mm in Sources */,
 				070E2D0F26F250890014AAC3 /* InbandChapterTrackPrivateAVFObjC.mm in Sources */,
+				77753CA22C6157210044215A /* InbandSynthesizedTextTrackPrivateObjC.mm in Sources */,
 				46CA943127B8695800F4F5FF /* InbandTextTrackPrivateAVFObjC.mm in Sources */,
 				CD063F821E23FA8900812BE3 /* InitDataRegistry.cpp in Sources */,
 				935C477009AC4D7300A6AAB4 /* KeyEventMac.mm in Sources */,

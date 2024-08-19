@@ -144,6 +144,10 @@ enum class WebsiteDataType : uint32_t;
 class SpeechRecognitionRemoteRealtimeMediaSourceManager;
 #endif
 
+//#if ENABLE(VIDEO) && ENABLE(WEB_AUDIO) && HAVE(SPEECH_RECOGNIZER)
+//class SpeechRecognitionAudioSourcePlaybackManager;
+//#endif
+
 enum ForegroundWebProcessCounterType { };
 typedef RefCounter<ForegroundWebProcessCounterType> ForegroundWebProcessCounter;
 typedef ForegroundWebProcessCounter::Token ForegroundWebProcessToken;

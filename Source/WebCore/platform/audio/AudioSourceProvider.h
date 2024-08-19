@@ -30,6 +30,10 @@
 
 #include <wtf/WeakPtr.h>
 
+namespace WTF {
+class MediaTime;
+}
+
 namespace WebCore {
 
 class AudioBus;
@@ -45,6 +49,12 @@ public:
     virtual void setClient(WeakPtr<AudioSourceProviderClient>&&) { };
 
     virtual bool isHandlingAVPlayer() const { return false; }
+
+#if ENABLE(WEB_AUDIO) && ENABLE(VIDEO)
+    using CompletedCaptionCreationTask = Function<void(NSString *, const WTF::MediaTime start, const WTF::MediaTime end)>;
+    using PartialCaptionCreationTask = Function<void(NSString *, const WTF::MediaTime)>;
+    virtual void beginVideoTranscription(PartialCaptionCreationTask&&, PartialCaptionCreationTask&&, CompletedCaptionCreationTask&&) { };
+#endif
 
     virtual ~AudioSourceProvider() = default;
 };

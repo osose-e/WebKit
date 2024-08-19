@@ -80,6 +80,37 @@ void SpeechRecognitionServer::requestPermissionForRequest(WebCore::SpeechRecogni
     });
 }
 
+//void SpeechRecognitionServer::handleRequest(UniqueRef<WebCore::SpeechRecognitionRequest>&& request, bool recognitionForAVplayback) {
+//    if (!recognitionForAVplayback) {
+//        handleRequest(WTFMove(request));
+//        return;
+//    }
+//    
+//    if (m_recognizer) {
+//        m_recognizer->abort(WebCore::SpeechRecognitionError { WebCore::SpeechRecognitionErrorType::Aborted, "Another request is started"_s });
+//        m_recognizer->prepareForDestruction();
+//    }
+//    
+//    auto clientIdentifier = request->clientIdentifier();
+//    m_recognizer = makeUnique<WebCore::SpeechRecognizer>([this, weakThis = WeakPtr { *this }](auto& update) {
+//        if (!weakThis)
+//            return;
+//
+//        sendUpdate(update);
+//
+//        if (update.type() == WebCore::SpeechRecognitionUpdateType::Error)
+//            m_recognizer->abort();
+//        else if (update.type() == WebCore::SpeechRecognitionUpdateType::End)
+//            m_recognizer->setInactive();
+//    }, WTFMove(request));
+//#if ENABLE(VIDEO) && HAVE(SPEECH_RECOGNIZER)
+//    // create media source node
+//    
+//#else
+//    sendUpdate(clientIdentifier, WebCore::SpeechRecognitionUpdateType::Error, WebCore::SpeechRecognitionError { WebCore::SpeechRecognitionErrorType::AudioCapture, "Audio capture is not implemented"_s });
+//#endif
+//}
+
 void SpeechRecognitionServer::handleRequest(UniqueRef<WebCore::SpeechRecognitionRequest>&& request)
 {
     if (m_recognizer) {

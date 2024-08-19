@@ -134,6 +134,9 @@
 
 #import <pal/cocoa/MediaToolboxSoftLink.h>
 
+#import "InbandSynthesizedTextTrackPrivateObjC.h"
+
+
 namespace std {
 template <> struct iterator_traits<HashSet<RefPtr<WebCore::MediaSelectionOptionAVFObjC>>::iterator> {
     typedef RefPtr<WebCore::MediaSelectionOptionAVFObjC> value_type;
@@ -1473,6 +1476,9 @@ void MediaPlayerPrivateAVFoundationObjC::platformPlay()
 
     m_requestedPlaying = true;
     setPlayerRate(m_requestedRate);
+#if HAVE(SPEECHRECOGNIZER)
+    startTranscription();
+#endif
 }
 
 void MediaPlayerPrivateAVFoundationObjC::platformPause()
@@ -2646,6 +2652,46 @@ AudioSourceProvider* MediaPlayerPrivateAVFoundationObjC::audioSourceProvider()
 
 #endif
 
+#if HAVE(SPEECHRECOGNIZER)
+void MediaPlayerPrivateAVFoundationObjC::startTranscription()
+{
+    if (m_provider && m_synthesizedTextTrack)
+        return;
+    
+    m_synthesizedTextTrack = InbandSynthesizedTextTrackPrivateObjC::create(InbandTextTrackPrivateMode::Showing, InbandTextTrackPrivateAVF::CueFormat::Generic);
+    if (auto player = this->player())
+        player->addTextTrack(*m_synthesizedTextTrack);
+    
+#if ENABLE(WEB_AUDIO) && USE(MEDIATOOLBOX)
+
+    // createCompletionHandler
+    // updateCompletionHandler
+    // finalizeCompletionHandler
+    m_provider = AudioSourceProviderAVFObjC::create(m_avPlayerItem.get());
+    m_provider->beginVideoTranscription( [ weakThis = ThreadSafeWeakPtr { *this } ](NSString *text, const WTF::MediaTime start){
+        if (RefPtr protectedThis = weakThis.get()) {
+            protectedThis->m_synthesizedTextTrack->createPartialCueForText(text, start);
+        }
+    }, [ weakThis = ThreadSafeWeakPtr { *this } ](NSString *text, const WTF::MediaTime start){
+        if (RefPtr protectedThis = weakThis.get()) {
+            protectedThis->m_synthesizedTextTrack->updatePartialCueForText(text, start);
+        }
+    }, [ weakThis = ThreadSafeWeakPtr { *this } ] (NSString *text, const WTF::MediaTime start, const WTF::MediaTime end) {
+        if (RefPtr protectedThis = weakThis.get()) {
+            protectedThis->m_synthesizedTextTrack->finalizeCueForText(text, start, end);
+        }
+    });
+    m_provider->setAudioTrack(firstEnabledAudibleTrack());
+#endif
+    
+}
+
+void MediaPlayerPrivateAVFoundationObjC::endTranscription()
+{
+    
+}
+#endif
+
 void MediaPlayerPrivateAVFoundationObjC::sizeChanged()
 {
     if (!m_avAsset)
@@ -3182,6 +3228,9 @@ void MediaPlayerPrivateAVFoundationObjC::processMediaSelectionOptions()
         }
 
         m_textTracks.append(InbandTextTrackPrivateAVFObjC::create(this, legibleGroup, option, m_currentTextTrackID++, InbandTextTrackPrivate::CueFormat::Generic));
+        // see whats going on here, to make a track insrance and show the code for the track base class that passes info up
+        // allws html media element to know abt the track and sets up the client relatiobshuip
+        // useful for understanding and mental model 🤠
     }
 
     processNewAndRemovedTextTracks(removedTextTracks);

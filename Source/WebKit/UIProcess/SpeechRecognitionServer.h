@@ -76,6 +76,7 @@ public:
 
 private:
     void requestPermissionForRequest(WebCore::SpeechRecognitionRequest&);
+//    void handleRequest(UniqueRef<WebCore::SpeechRecognitionRequest>&&, bool);
     void handleRequest(UniqueRef<WebCore::SpeechRecognitionRequest>&&);
     void sendUpdate(WebCore::SpeechRecognitionConnectionClientIdentifier, WebCore::SpeechRecognitionUpdateType, std::optional<WebCore::SpeechRecognitionError> = std::nullopt, std::optional<Vector<WebCore::SpeechRecognitionResultData>> = std::nullopt);
     void sendUpdate(const WebCore::SpeechRecognitionUpdate&);

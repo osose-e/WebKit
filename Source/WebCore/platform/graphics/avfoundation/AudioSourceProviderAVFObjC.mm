@@ -38,10 +38,21 @@
 #import <AVFoundation/AVAudioMix.h>
 #import <AVFoundation/AVMediaFormat.h>
 #import <AVFoundation/AVPlayerItem.h>
+
+#if ENABLE(VIDEO)
+#import <AVFoundation/AVAudioFormat.h>
+#import <AVFoundation/AVAudioBuffer.h>
+#import <pal/cocoa/SpeechSoftLink.h>
+#endif
+
 #import <objc/runtime.h>
 #import <pal/avfoundation/MediaTimeAVFoundation.h>
+
+#import <wtf/BlockPtr.h>
 #import <wtf/Lock.h>
 #import <wtf/MainThread.h>
+#import <wtf/MediaTime.h>
+#import <wtf/RetainPtr.h>
 
 #if !LOG_DISABLED
 #import <wtf/StringPrintStream.h>
@@ -51,6 +62,115 @@
 #import <pal/cf/CoreMediaSoftLink.h>
 #import <pal/cocoa/AVFoundationSoftLink.h>
 #import <pal/cocoa/MediaToolboxSoftLink.h>
+
+#pragma mark SFSpeechRecognitionTaskDelegate
+#if ENABLE(VIDEO)
+@interface WebSynthesizedTextGeneratorRequestDelegate : NSObject<SFSpeechRecognitionTaskDelegate> {
+    ThreadSafeWeakPtr<WebCore::AudioSourceProviderAVFObjC> _audioSourceProvider;
+    NSRange _rangeOfCurrentTranscription;
+    MediaTime _startTimeOfCurrentTranscriptionRange;
+    MediaTime _endTimeOfCurrentTranscriptionRange;
+    NSUInteger _startingSegmentIndex;
+    WebCore::AudioSourceProviderAVFObjC::PartialCaptionCreationTask _createCompletionHandler;
+    WebCore::AudioSourceProviderAVFObjC::PartialCaptionCreationTask _updateCompletionHandler;
+    WebCore::AudioSourceProviderAVFObjC::CompletedCaptionCreationTask _finalizeCompletionHandler;
+    BOOL _firstWordOfCue;
+    
+}
+- (instancetype) initWithAudioSourceProvider:(WebCore::AudioSourceProviderAVFObjC&)audioSourceProvider cueCreateCompletionHandler:(WebCore::AudioSourceProviderAVFObjC::PartialCaptionCreationTask&&)createCompletionHandler cueUpdateCompletionHandler:(WebCore::AudioSourceProviderAVFObjC::PartialCaptionCreationTask&&)updateCompletionHandler andCueFinalizeCompletionHandler:(WebCore::AudioSourceProviderAVFObjC::CompletedCaptionCreationTask&&)finalizeCompletionHandler;
+- (void)speechRecognitionTask:(SFSpeechRecognitionTask *)task didHypothesizeTranscription:(SFTranscription *)transcription;
+- (void)speechRecognitionTask:(SFSpeechRecognitionTask *)task didFinishRecognition:(SFSpeechRecognitionResult *)recognitionResult;
+@end
+
+@implementation WebSynthesizedTextGeneratorRequestDelegate
+- (instancetype) initWithAudioSourceProvider:(WebCore::AudioSourceProviderAVFObjC&)audioSourceProvider cueCreateCompletionHandler:(WebCore::AudioSourceProviderAVFObjC::PartialCaptionCreationTask&&)createCompletionHandler cueUpdateCompletionHandler:(WebCore::AudioSourceProviderAVFObjC::PartialCaptionCreationTask&&)updateCompletionHandler andCueFinalizeCompletionHandler:(WebCore::AudioSourceProviderAVFObjC::CompletedCaptionCreationTask&&)finalizeCompletionHandler {
+    self = [super init];
+    if (!self)
+        return nil;
+    _audioSourceProvider = audioSourceProvider;
+    _rangeOfCurrentTranscription = NSMakeRange(0, 0);
+    _startTimeOfCurrentTranscriptionRange = MediaTime();
+    _endTimeOfCurrentTranscriptionRange = MediaTime();
+    _startingSegmentIndex = 0;
+    _createCompletionHandler = WTFMove(createCompletionHandler);
+    _updateCompletionHandler = WTFMove(updateCompletionHandler);
+    _finalizeCompletionHandler = WTFMove(finalizeCompletionHandler);
+    _firstWordOfCue = YES;
+    return self;
+}
+
+- (void)speechRecognitionTask:(SFSpeechRecognitionTask *)task didHypothesizeTranscription:(SFTranscription *)transcription
+{
+    NSUInteger i;
+    NSUInteger rangeEnd = 0;
+
+    for (i = _startingSegmentIndex ; i < [transcription.segments count]; i++) {
+        SFTranscriptionSegment *transcriptionSegment = [transcription.segments objectAtIndex:i];
+        SFTranscriptionSegment *baseTranscriptionSegment = [transcription.segments objectAtIndex:_startingSegmentIndex];
+        _rangeOfCurrentTranscription.location = baseTranscriptionSegment.substringRange.location;
+//        rangeEnd = transcriptionSegment.substringRange.length + transcriptionSegment.substringRange.location - baseTranscriptionSegment.substringRange.location;
+        double timeOfSegment = (transcriptionSegment.timestamp / 0.033);
+        if ([transcriptionSegment.substring isEqualToString:@"."] || [transcriptionSegment.substring isEqualToString:@","]) {
+            if (i == _startingSegmentIndex)
+                _startingSegmentIndex += 1;
+            continue;
+        }
+            
+        if ((timeOfSegment == floor(timeOfSegment)) && floor(timeOfSegment) != 0 && (int)timeOfSegment % 3 == 0) {
+            _rangeOfCurrentTranscription.length = transcriptionSegment.substringRange.location + transcriptionSegment.substringRange.length - _rangeOfCurrentTranscription.location + 1;
+            if (_rangeOfCurrentTranscription.location + _rangeOfCurrentTranscription.length > transcription.formattedString.length)
+                _rangeOfCurrentTranscription.length -= 1;
+            NSString *text = [transcription.formattedString substringWithRange:_rangeOfCurrentTranscription];
+            _endTimeOfCurrentTranscriptionRange = _endTimeOfCurrentTranscriptionRange + MediaTime::createWithDouble(2.5);
+            _finalizeCompletionHandler(text, _startTimeOfCurrentTranscriptionRange, _endTimeOfCurrentTranscriptionRange + MediaTime::createWithDouble(2.7));
+            // NSLog(@"Finalized Text: %@ Start: %f End: %f SegTime: %f",text, _startTimeOfCurrentTranscriptionRange.toFloat(), _endTimeOfCurrentTranscriptionRange.toFloat(), timeOfSegment);
+            
+            _startTimeOfCurrentTranscriptionRange = _endTimeOfCurrentTranscriptionRange;
+            _startingSegmentIndex = i + 1;
+            _rangeOfCurrentTranscription.location = transcriptionSegment.substringRange.location + transcriptionSegment.substringRange.length;
+            _rangeOfCurrentTranscription.length = 0;
+            _firstWordOfCue = YES;
+            rangeEnd = 0;
+            break;
+        } else {
+            if (_firstWordOfCue) {
+                _rangeOfCurrentTranscription.location = transcriptionSegment.substringRange.location;
+                _createCompletionHandler(transcriptionSegment.substring, _startTimeOfCurrentTranscriptionRange);
+                _firstWordOfCue = NO;
+                // NSLog(@"Started Text: %@ Start: %f", transcriptionSegment.substring, _startTimeOfCurrentTranscriptionRange.toFloat());
+                
+            } else {
+                // _rangeOfCurrentTranscription.location
+                NSString *text = [transcription.formattedString substringWithRange:NSMakeRange(_rangeOfCurrentTranscription.location, transcriptionSegment.substringRange.location + transcriptionSegment.substringRange.length - _rangeOfCurrentTranscription.location)];
+//                if ([transcriptionSegment.substring isEqualToString:@"."]) {
+//                    _endTimeOfCurrentTranscriptionRange = _endTimeOfCurrentTranscriptionRange + MediaTime::createWithDouble(3.0);
+//                    _finalizeCompletionHandler(text, _startTimeOfCurrentTranscriptionRange, _endTimeOfCurrentTranscriptionRange + MediaTime::createWithDouble(3.0));
+//                    
+//                    _startTimeOfCurrentTranscriptionRange = _endTimeOfCurrentTranscriptionRange;
+//                    _startingSegmentIndex = i + 1;
+//                    _rangeOfCurrentTranscription.location = transcriptionSegment.substringRange.location + transcriptionSegment.substringRange.length;
+//                    _rangeOfCurrentTranscription.length = 0;
+//                    _firstWordOfCue = YES;
+//                    rangeEnd = 0;
+//                } else {
+                    _updateCompletionHandler(text, _startTimeOfCurrentTranscriptionRange);
+               // NSLog(@"Updated Text: %@ Start: %f",text, _startTimeOfCurrentTranscriptionRange.toFloat());
+
+//
+//                }
+            }
+         }
+
+    }
+}
+
+- (void)speechRecognitionTask:(SFSpeechRecognitionTask *)task didFinishRecognition:(SFSpeechRecognitionResult *)recognitionResult
+{
+    NSLog(@"CAPTIONS: %@", recognitionResult.bestTranscription.formattedString);
+}
+@end
+#endif
+// have the objective c class have ptr to the c++ class
 
 namespace WebCore {
 
@@ -184,6 +304,27 @@ void AudioSourceProviderAVFObjC::recreateAudioMixIfNeeded()
     createMixIfNeeded();
 }
 
+#if ENABLE(VIDEO)
+void AudioSourceProviderAVFObjC::beginVideoTranscription(PartialCaptionCreationTask&& createCompletionHandler, PartialCaptionCreationTask&& updateCompletionHandler, CompletedCaptionCreationTask&& finalizeCompletionHandler) {
+    // make a blk ptr with lambda - no silly you deleted it 🙈
+    // initialize delegate with it
+    // set it and call it later 🤡
+    m_transcriptionGeneratorInUse = true;
+    m_generatorRecognitionTaskDelegate = adoptNS([[WebSynthesizedTextGeneratorRequestDelegate alloc] initWithAudioSourceProvider:*this cueCreateCompletionHandler:WTFMove(createCompletionHandler) cueUpdateCompletionHandler:WTFMove(updateCompletionHandler) andCueFinalizeCompletionHandler:WTFMove(finalizeCompletionHandler)]);
+#if 0
+    auto completionHandler = makeBlockPtr([weakThis = ThreadSafeWeakPtr { *this }, &task](NSString *text, const MediaTime start, const MediaTime end) mutable {
+        if (!weakThis.get())
+            return;
+
+        task(text, start, end);
+    });
+    m_generatorRecognitionTaskDelegate = adoptNS([[WebSynthesizedTextGeneratorRequestDelegate alloc] initWithAudioSourceProvider:*this andCompletionHandler:completionHandler.get()]) ;
+#endif
+          // (void(^)(NSString *text, const MediaTime start, const MediaTime end))
+    m_generator = adoptNS([PAL::allocSFSpeechRecognizerInstance() initWithLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en-US"]]);
+}
+#endif
+
 void AudioSourceProviderAVFObjC::destroyMixIfNeeded()
 {
     if (!m_avAudioMix)
@@ -206,7 +347,14 @@ void AudioSourceProviderAVFObjC::destroyMixIfNeeded()
 
 void AudioSourceProviderAVFObjC::createMixIfNeeded()
 {
-    if (!m_client || !m_avPlayerItem || !m_avAssetTrack)
+    // look into her
+    if (!m_generator && !m_client)
+        return;
+    
+    if (!m_transcriptionGeneratorInUse)
+        return;
+        
+    if (!m_avPlayerItem || !m_avAssetTrack)
         return;
 
     ASSERT(!m_avAudioMix);
@@ -245,6 +393,7 @@ void AudioSourceProviderAVFObjC::createMixIfNeeded()
     
     [m_avAudioMix setInputParameters:@[parameters.get()]];
     [m_avPlayerItem setAudioMix:m_avAudioMix.get()];
+    // consider changing
     m_weakFactory.initializeIfNeeded(*this);
 }
 
@@ -334,16 +483,60 @@ void AudioSourceProviderAVFObjC::prepare(CMItemCount maxFrames, const AudioStrea
     m_list = std::unique_ptr<AudioBufferList>((AudioBufferList*) ::operator new (bufferListSize));
     memset(m_list.get(), 0, bufferListSize);
     m_list->mNumberBuffers = numberOfChannels;
+    
+#if ENABLE(VIDEO)
+    if (m_transcriptionGeneratorInUse) {
+        m_audioProcessingFormat = adoptNS([PAL::allocAVAudioFormatInstance() initWithStreamDescription:m_tapDescription.get()]);
+//        m_generatorRecognitionTaskDelegate = adoptNS([[WebSynthesizedTextGeneratorRequestDelegate alloc] initWithAudioSourceProvider:*this]);
+        
+        auto completionHandler = makeBlockPtr([weakThis = ThreadSafeWeakPtr { *this }](SFSpeechRecognizerAuthorizationStatus authStatus) mutable {
+            
 
-    callOnMainThread([weakThis = m_weakFactory.createWeakPtr(*this), numberOfChannels, sampleRate] {
-        auto* self = weakThis.get();
-        if (self && self->m_client)
-            self->m_client->setFormat(numberOfChannels, sampleRate);
+            callOnMainThread([authStatus, weakThis = WTFMove(weakThis)] {
+                if (RefPtr protectedThis = weakThis.get()) {
+                    if (authStatus == SFSpeechRecognizerAuthorizationStatus::SFSpeechRecognizerAuthorizationStatusAuthorized) {
+                        protectedThis->m_generator = adoptNS([PAL::allocSFSpeechRecognizerInstance() initWithLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en-US"]]);
+                        
+                        protectedThis->m_samplesBuffer = adoptNS([PAL::allocSFSpeechAudioBufferRecognitionRequestInstance() init]);
+                        protectedThis->m_samplesBuffer.get().taskHint = SFSpeechRecognitionTaskHint::SFSpeechRecognitionTaskHintDictation;
+                        protectedThis->m_samplesBuffer.get().addsPunctuation = true;
+                        
+                        // Will using this as a delegate work?
+                        // Should be recognizer -- recognizer
+                        protectedThis->m_generatorRecogitionTask = [protectedThis->m_generator.get() recognitionTaskWithRequest:protectedThis->m_samplesBuffer.get() delegate:protectedThis->m_generatorRecognitionTaskDelegate.get()];
+                        //                    NSLog(@"PREPARE steps");
+                    } else {
+                        NSLog(@"Error: No authorization for use of synthesized text generator.");
+                    }
+                }
+            });
+        });
+        [PAL::getSFSpeechRecognizerClass() requestAuthorization:completionHandler.get()];
+    }
+#endif
+    
+    callOnMainThread([weakThis = ThreadSafeWeakPtr { *this }, numberOfChannels, sampleRate] {
+        if (RefPtr protectedThis = weakThis.get()){
+            if (protectedThis->m_client)
+                protectedThis->m_client->setFormat(numberOfChannels, sampleRate);
+        }
+            
     });
 }
 
 void AudioSourceProviderAVFObjC::unprepare()
 {
+#if ENABLE(VIDEO)
+    if (m_transcriptionGeneratorInUse) {
+        [m_samplesBuffer.get() endAudio];
+        [m_generatorRecogitionTask cancel];
+        m_generatorRecognitionTaskDelegate = nil;
+        
+        
+        // set delegate to nil !
+        // cancel on the task
+    }
+#endif
     m_tapDescription = nullptr;
     m_outputDescription = nullptr;
     m_ringBuffer = nullptr;
@@ -355,19 +548,19 @@ void AudioSourceProviderAVFObjC::process(MTAudioProcessingTapRef tap, CMItemCoun
     UNUSED_PARAM(flags);
     if (!m_ringBuffer)
         return;
-
+    
     CMItemCount itemCount = 0;
     CMTimeRange rangeOut;
     OSStatus status = PAL::MTAudioProcessingTapGetSourceAudio(tap, numberOfFrames, bufferListInOut, flagsOut, &rangeOut, &itemCount);
     if (status != noErr || !itemCount)
         return;
-
+    
     MediaTime rangeStart = PAL::toMediaTime(rangeOut.start);
     MediaTime rangeDuration = PAL::toMediaTime(rangeOut.duration);
-
+    
     if (rangeStart.isInvalid())
         return;
-
+    
     MediaTime currentTime = PAL::toMediaTime(PAL::CMTimebaseGetTime([m_avPlayerItem timebase]));
     if (currentTime.isInvalid())
         return;
@@ -387,7 +580,7 @@ void AudioSourceProviderAVFObjC::process(MTAudioProcessingTapRef tap, CMItemCoun
     }
 
     auto [startFrame, endFrame] = m_ringBuffer->getStoreTimeBounds();
-
+        // Only check the write-ahead time when playback begins.
     // Check to see if the underlying media has seeked, which would require us to "flush"
     // our outstanding buffers.
     if (rangeStart != m_endTimeAtLastProcess)
@@ -395,21 +588,40 @@ void AudioSourceProviderAVFObjC::process(MTAudioProcessingTapRef tap, CMItemCoun
 
     m_startTimeAtLastProcess = rangeStart;
     m_endTimeAtLastProcess = rangeStart + rangeDuration;
-
+    // Check to see if the underlying media has seeked, which would require us to "flush"
     // StartOfStream indicates a discontinuity, such as when an AVPlayerItem is re-added
     // to an AVPlayer, so "flush" outstanding buffers.
     if (flagsOut && *flagsOut & kMTAudioProcessingTapFlag_StartOfStream)
         m_seekTo = endFrame;
-
+    
     m_ringBuffer->store(bufferListInOut, itemCount, endFrame);
 
-    // Mute the default audio playback by zeroing the tap-owned buffers.
-    for (uint32_t i = 0; i < bufferListInOut->mNumberBuffers; ++i) {
-        AudioBuffer& buffer = bufferListInOut->mBuffers[i];
-        memset(buffer.mData, 0, buffer.mDataByteSize);
+    NSLog(@"Time: %f", m_startTimeAtLastProcess.toFloat());
+    
+    // If a client exists, mute the default audio playback by zeroing the tap-owned buffers.
+    if (m_client) {
+        for (uint32_t i = 0; i < bufferListInOut->mNumberBuffers; ++i) {
+            AudioBuffer& buffer = bufferListInOut->mBuffers[i];
+            memset(buffer.mData, 0, buffer.mDataByteSize);
+        }
+        *numberFramesOut = 0;
+    } else {
+        if (numberFramesOut)
+            *numberFramesOut = numberOfFrames;
+        
+        if (flagsOut)
+            *flagsOut = flags;
     }
-    *numberFramesOut = 0;
-
+    
+#if ENABLE(VIDEO)
+    if (m_transcriptionGeneratorInUse) {
+        RetainPtr<AVAudioPCMBuffer> pcmBuffer = adoptNS([PAL::allocAVAudioPCMBufferInstance() initWithPCMFormat:m_audioProcessingFormat.get() bufferListNoCopy:bufferListInOut deallocator:nil]);
+        
+        [m_samplesBuffer.get() appendAudioPCMBuffer:pcmBuffer.get()];
+    }
+#endif
+    
+    
     if (m_audioCallback)
         m_audioCallback(endFrame, itemCount);
 }
