@@ -128,6 +128,8 @@ void SpeechRecognitionCaptureSourceImpl::audioSamplesAvailable(const WTF::MediaT
                     return;
     
                 m_stateUpdateCallback(SpeechRecognitionUpdate::createError(m_clientIdentifier, SpeechRecognitionError { SpeechRecognitionErrorType::AudioCapture, "Unable to set input format"_s }));
+                // this might need to be refactored to better to more clearly defined in  f
+                // this could also prove this was a change to right thing on the ASP to covert speech the  gf
             });
             return;
         }

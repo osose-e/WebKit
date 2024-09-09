@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Apple Inc. All rights reserved.
+ * Copyright (C) 2024 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -25,31 +25,4 @@
 
 #pragma once
 
-#include "WebPage.h"
-#include "WebSpeechRecognitionConnection.h"
-#include <WebCore/SpeechRecognitionProvider.h>
 
-namespace WebKit {
-
-
-class WebSpeechRecognitionProvider final : public WebCore::SpeechRecognitionProvider {
-public:
-    explicit WebSpeechRecognitionProvider(WebCore::PageIdentifier identifier)
-        : m_pageIdentifier(identifier)
-    {
-    }
-
-    WebCore::SpeechRecognitionConnection& speechRecognitionConnection() final
-    {
-        if (!m_connection)
-            m_connection = WebSpeechRecognitionConnection::create(m_pageIdentifier);
-
-        return *m_connection;
-    }
-
-private:
-    WebCore::PageIdentifier m_pageIdentifier;
-    RefPtr<WebSpeechRecognitionConnection> m_connection;
-};
-
-} // namespace WebKit

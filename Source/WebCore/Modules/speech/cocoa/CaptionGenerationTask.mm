@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Apple Inc. All rights reserved.
+ * Copyright (C) 2024 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,11 +24,10 @@
  */
 
 #import "config.h"
-#import "WebSpeechRecognizerTask.h"
+#import "CaptionGenerationTask.h"
 
 #if HAVE(SPEECHRECOGNIZER)
 
-#import <pal/spi/cocoa/SpeechSPI.h>
 #import <wtf/BlockPtr.h>
 #import <wtf/WeakObjCPtr.h>
 
@@ -39,12 +38,11 @@ static constexpr size_t maximumRecognitionDuration = 60 * 60;
 
 NS_ASSUME_NONNULL_BEGIN
 // important document where transcriptions take place
-@interface WebSpeechRecognizerTaskImpl : NSObject<SFSpeechRecognitionTaskDelegate, SFSpeechRecognizerDelegate> {
+@interface CaptionGenertionTaskImpl : NSObject<SFSpeechRecognitionTaskDelegate, SFSpeechRecognizerDelegate> {
 @private
-    WebCore::SpeechRecognitionConnectionClientIdentifier _identifier;
-    BlockPtr<void(const WebCore::SpeechRecognitionUpdate&)> _delegateCallback;
-    bool _doMultipleRecognitions;
-    uint64_t _maxAlternatives;
+    WebCore::MediaPlayerIdentifier _identifier;
+     BlockPtr<void()> _delegateCallback;
+    // do I need a callback ?
     RetainPtr<SFSpeechRecognizer> _recognizer;
     RetainPtr<SFSpeechAudioBufferRecognitionRequest> _request;
     WeakObjCPtr<SFSpeechRecognitionTask> _task;
@@ -53,32 +51,26 @@ NS_ASSUME_NONNULL_BEGIN
     bool _hasSentEnd;
 }
 
-- (instancetype)initWithIdentifier:(WebCore::SpeechRecognitionConnectionClientIdentifier)identifier locale:(NSString*)localeIdentifier doMultipleRecognitions:(BOOL)continuous reportInterimResults:(BOOL)interimResults maxAlternatives:(unsigned long)alternatives delegateCallback:(void(^)(const WebCore::SpeechRecognitionUpdate&))callback;
-- (void)callbackWithTranscriptions:(NSArray<SFTranscription *> *)transcriptions isFinal:(BOOL)isFinal;
-- (void)audioSamplesAvailable:(CMSampleBufferRef)sampleBuffer;
+- (instancetype)initWithIdentifier:(WebCore::MediaPlayerIdentifier)identifier locale:(NSString*)localeIdentifier delegateCallback:(void(^))callback;
+- (void)callbackWithTranscriptions:(NSArray<SFTranscription *> *)transcriptions;
+- (void)audioSamplesAvailable:(AVAudioPCMBuffer)sampleBuffer;
 - (void)abort;
 - (void)stop;
-- (void)sendSpeechStartIfNeeded;
-- (void)sendSpeechEndIfNeeded;
-- (void)sendEndIfNeeded;
 
 @end
 
-@implementation WebSpeechRecognizerTaskImpl
+@implementation CaptionGenertionTaskImpl
 
-- (instancetype)initWithIdentifier:(WebCore::SpeechRecognitionConnectionClientIdentifier)identifier locale:(NSString*)localeIdentifier doMultipleRecognitions:(BOOL)continuous reportInterimResults:(BOOL)interimResults maxAlternatives:(unsigned long)alternatives delegateCallback:(void(^)(const WebCore::SpeechRecognitionUpdate&))callback
+- (instancetype)initWithIdentifier:(WebCore::MediaPlayerIdentifier)identifier locale:(NSString*)localeIdentifier delegateCallback:(void(^))callback
 {
     if (!(self = [super init]))
         return nil;
 
     _identifier = identifier;
-    _doMultipleRecognitions = continuous;
     _delegateCallback = callback;
     _hasSentSpeechStart = false;
     _hasSentSpeechEnd = false;
     _hasSentEnd = false;
-
-    _maxAlternatives = alternatives ? alternatives : 1;
 
     if (![localeIdentifier length])
         _recognizer = adoptNS([PAL::allocSFSpeechRecognizerInstance() init]);
@@ -99,24 +91,20 @@ NS_ASSUME_NONNULL_BEGIN
     _request = adoptNS([PAL::allocSFSpeechAudioBufferRecognitionRequestInstance() init]);
     if ([_recognizer supportsOnDeviceRecognition])
         [_request setRequiresOnDeviceRecognition:YES];
-    [_request setShouldReportPartialResults:interimResults];
+    [_request setShouldReportPartialResults:YES];
     [_request setTaskHint:SFSpeechRecognitionTaskHintDictation];
-    [_request setDetectMultipleUtterances:YES];
-    [_request _setMaximumRecognitionDuration:maximumRecognitionDuration];
+    [_request setAddsPunctuation:YES];
 
     _task = [_recognizer recognitionTaskWithRequest:_request.get() delegate:self];
     return self;
 }
 
-- (void)callbackWithTranscriptions:(NSArray<SFTranscription *> *)transcriptions isFinal:(BOOL)isFinal
+- (void)callbackWithTranscriptions:(NSArray<SFTranscription *> *)transcriptions
 {
     Vector<WebCore::SpeechRecognitionAlternativeData> alternatives;
-    alternatives.reserveInitialCapacity(_maxAlternatives);
     for (SFTranscription* transcription in transcriptions) {
-        // FIXME: <rdar://73629573> get confidence of SFTranscription when possible.
         double maxConfidence = 0.0;
         for (SFTranscriptionSegment* segment in [transcription segments]) {
-            double confidence = [segment confidence];
             maxConfidence = maxConfidence < confidence ? confidence : maxConfidence;
         }
         alternatives.append(WebCore::SpeechRecognitionAlternativeData { [transcription formattedString], maxConfidence });
@@ -126,7 +114,7 @@ NS_ASSUME_NONNULL_BEGIN
     _delegateCallback(WebCore::SpeechRecognitionUpdate::createResult(_identifier, { WebCore::SpeechRecognitionResultData { WTFMove(alternatives), !!isFinal } }));
 }
 
-- (void)audioSamplesAvailable:(CMSampleBufferRef)sampleBuffer
+- (void)audioSamplesAvailable:(AVAudioPCMBuffer)sampleBuffer
 {
     ASSERT(isMainThread());
     [_request appendAudioSampleBuffer:sampleBuffer];
@@ -134,14 +122,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)abort
 {
-    if (!_task || [_task state] == SFSpeechRecognitionTaskStateCanceling)
+    if (!_task)
         return;
-
-    if ([_task state] == SFSpeechRecognitionTaskStateCompleted) {
-        [self sendSpeechEndIfNeeded];
-        [self sendEndIfNeeded];
-        return;
-    }
 
     [self sendSpeechEndIfNeeded];
     [_request endAudio];
@@ -150,14 +132,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)stop
 {
-    if (!_task || [_task state] == SFSpeechRecognitionTaskStateCanceling)
+    if (!_task)
         return;
-
-    if ([_task state] == SFSpeechRecognitionTaskStateCompleted) {
-        [self sendSpeechEndIfNeeded];
-        [self sendEndIfNeeded];
-        return;
-    }
 
     [self sendSpeechEndIfNeeded];
     [_request endAudio];
@@ -170,7 +146,7 @@ NS_ASSUME_NONNULL_BEGIN
         return;
 
     _hasSentSpeechStart = true;
-    _delegateCallback(WebCore::SpeechRecognitionUpdate::create(_identifier, WebCore::SpeechRecognitionUpdateType::SpeechStart));
+    _delegateCallback();
 }
 
 - (void)sendSpeechEndIfNeeded
@@ -179,7 +155,7 @@ NS_ASSUME_NONNULL_BEGIN
         return;
 
     _hasSentSpeechEnd = true;
-    _delegateCallback(WebCore::SpeechRecognitionUpdate::create(_identifier, WebCore::SpeechRecognitionUpdateType::SpeechEnd));
+    _delegateCallback();
 }
 
 - (void)sendEndIfNeeded
@@ -195,13 +171,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)speechRecognizer:(SFSpeechRecognizer *)speechRecognizer availabilityDidChange:(BOOL)available
 {
-    ASSERT(isMainThread());
-
-    if (available || !_task)
-        return;
-
-    auto error = WebCore::SpeechRecognitionError { WebCore::SpeechRecognitionErrorType::ServiceNotAllowed, "Speech recognition service becomes unavailable"_s };
-    _delegateCallback(WebCore::SpeechRecognitionUpdate::createError(_identifier, WTFMove(error)));
 }
 
 #pragma mark SFSpeechRecognitionTaskDelegate
@@ -211,20 +180,16 @@ NS_ASSUME_NONNULL_BEGIN
     ASSERT(isMainThread());
 
     [self sendSpeechStartIfNeeded];
-    [self callbackWithTranscriptions:[NSArray arrayWithObjects:transcription, nil] isFinal:NO];
+    [self callbackWithTranscriptions:[NSArray arrayWithObjects:transcription, nil]];
 }
 
 - (void)speechRecognitionTask:(SFSpeechRecognitionTask *)task didFinishRecognition:(SFSpeechRecognitionResult *)recognitionResult
 {
     ASSERT(isMainThread());
 
-    if (task.state == SFSpeechRecognitionTaskStateCanceling || (!_doMultipleRecognitions && task.state == SFSpeechRecognitionTaskStateCompleted))
-        return;
+    [self callbackWithTranscriptions:recognitionResult.transcriptions];
 
-    [self callbackWithTranscriptions:recognitionResult.transcriptions isFinal:YES];
-
-    if (!_doMultipleRecognitions)
-        [self stop];
+    [self stop];
 }
 
 - (void)speechRecognitionTaskWasCancelled:(SFSpeechRecognitionTask *)task
@@ -237,26 +202,18 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)speechRecognitionTask:(SFSpeechRecognitionTask *)task didFinishSuccessfully:(BOOL)successfully
 {
-    ASSERT(isMainThread());
-
-    if (!successfully) {
-        auto error = WebCore::SpeechRecognitionError { WebCore::SpeechRecognitionErrorType::Aborted, task.error.localizedDescription };
-        _delegateCallback(WebCore::SpeechRecognitionUpdate::createError(_identifier, WTFMove(error)));
-    }
-    
-    [self sendEndIfNeeded];
 }
 
 @end
 
-@implementation WebSpeechRecognizerTask
+@implementation CaptionGenerationTask
 
-- (instancetype)initWithIdentifier:(WebCore::SpeechRecognitionConnectionClientIdentifier)identifier locale:(NSString*)localeIdentifier doMultipleRecognitions:(BOOL)continuous reportInterimResults:(BOOL)interimResults maxAlternatives:(unsigned long)alternatives delegateCallback:(void(^)(const WebCore::SpeechRecognitionUpdate&))callback
+- (instancetype)initWithIdentifier:(WebCore::MediaPlayerIdentifier)identifier locale:(NSString*)localeIdentifier delegateCallback:(void(^))callback
 {
     if (!(self = [super init]))
         return nil;
 
-    _impl = adoptNS([[WebSpeechRecognizerTaskImpl alloc] initWithIdentifier:identifier locale:localeIdentifier doMultipleRecognitions:continuous reportInterimResults:interimResults maxAlternatives:alternatives delegateCallback:callback]);
+    _impl = adoptNS([[CaptionGenerationTaskImpl alloc] initWithIdentifier:identifier locale:localeIdentifier delegateCallback:callback]);
 
     if (!_impl) {
         [self release];

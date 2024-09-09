@@ -34,8 +34,10 @@ class MediaTime;
 
 namespace WebCore {
 
+class AudioSourceProvider;
 class AudioStreamDescription;
 class PlatformAudioData;
+//class RemoteAudioSourceProvider;
 class SpeechRecognitionCaptureSourceImpl;
 class SpeechRecognitionUpdate;
 
@@ -50,6 +52,8 @@ public:
     using DataCallback = Function<void(const WTF::MediaTime&, const PlatformAudioData&, const AudioStreamDescription&, size_t)>;
     using StateUpdateCallback = Function<void(const SpeechRecognitionUpdate&)>;
     SpeechRecognitionCaptureSource(SpeechRecognitionConnectionClientIdentifier, DataCallback&&, StateUpdateCallback&&, Ref<RealtimeMediaSource>&&);
+    
+//    SpeechRecognitionCaptureSource(SpeechRecognitionConnectionClientIdentifier, DataCallback&&, StateUpdateCallback&&, Ref<AudioSourceProvider>&&);
     WEBCORE_EXPORT static std::optional<WebCore::CaptureDevice> findCaptureDevice();
     WEBCORE_EXPORT static CaptureSourceOrError createRealtimeMediaSource(const CaptureDevice&, PageIdentifier);
 #endif
@@ -57,6 +61,7 @@ public:
 private:
 #if ENABLE(MEDIA_STREAM)
     std::unique_ptr<SpeechRecognitionCaptureSourceImpl> m_impl;
+//    std::unique_ptr<RemoteAudioSourceProvider> m_audioPlaybackImpl;
 #endif
 };
 

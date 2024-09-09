@@ -1511,6 +1511,7 @@ AudioSourceProvider* MediaPlayer::audioSourceProvider()
 #if HAVE(SPEECHRECOGNIZER)
 void MediaPlayer::startTranscription()
 {
+    // Ensure remote audio source provider is created.
     m_private->startTranscription();
 }
 

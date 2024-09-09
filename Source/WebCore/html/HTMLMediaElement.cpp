@@ -2025,7 +2025,7 @@ void HTMLMediaElement::updateActiveTextTrackCues(const MediaTime& movieTime)
 
     auto identifier = LOGIDENTIFIER;
     INFO_LOG(identifier, "nextInterestingTime:", nextInterestingTime);
-
+// imp
     if (RefPtr player = m_player; nextInterestingTime.isValid() && player) {
         player->performTaskAtTime([this, weakThis = WeakPtr { *this }, identifier] {
             RefPtr protectedThis = weakThis.get();

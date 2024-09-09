@@ -37,6 +37,7 @@ OBJC_CLASS WebSpeechRecognizerTask;
 #endif
 
 namespace WebCore {
+class AudioSourceProvider;
 class SpeechRecognizer;
 }
 
@@ -59,6 +60,9 @@ public:
 #if ENABLE(MEDIA_STREAM)
     WEBCORE_EXPORT void start(Ref<RealtimeMediaSource>&&, bool mockSpeechRecognitionEnabled);
 #endif
+#if ENABLE(VIDEO)
+    WEBCORE_EXPORT void start(AudioSourceProvider*, bool mockSpeechRecognitionEnabled);
+#endif
     WEBCORE_EXPORT void abort(std::optional<SpeechRecognitionError>&& = std::nullopt);
     WEBCORE_EXPORT void stop();
     WEBCORE_EXPORT void prepareForDestruction();
@@ -79,6 +83,12 @@ private:
 #if ENABLE(MEDIA_STREAM)
     void startCapture(Ref<RealtimeMediaSource>&&);
 #endif
+    
+//#if ENABLE(VIDEO)
+//    // I need the media player private and the identifier to create a remote audio source provider
+//    // I need to provide the remote audio source provider a callback for my data that has been captured
+//    void startCapture(AudioSourceProvider*);
+//#endif
     void stopCapture();
     void dataCaptured(const WTF::MediaTime&, const PlatformAudioData&, const AudioStreamDescription&, size_t sampleCount);
     bool startRecognition(bool mockSpeechRecognitionEnabled, SpeechRecognitionConnectionClientIdentifier, const String& localeIdentifier, bool continuous, bool interimResults, uint64_t alternatives);
@@ -93,6 +103,7 @@ private:
 #if HAVE(SPEECHRECOGNIZER)
     RetainPtr<WebSpeechRecognizerTask> m_task;
     CMTime m_currentAudioSampleTime;
+    // this can be converted to media time, or my media time can convert to cmtime
 #endif
 };
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Apple Inc. All rights reserved.
+ * Copyright (C) 2024 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,33 +23,27 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#if HAVE(SPEECHRECOGNIZER)
 
-#include "WebPage.h"
-#include "WebSpeechRecognitionConnection.h"
-#include <WebCore/SpeechRecognitionProvider.h>
+#import "MediaPlayerIdentifier.h"
 
-namespace WebKit {
+NS_ASSUME_NONNULL_BEGIN
 
+@class AVAudioPCMBuffer;
+@class WebSpeechRecognizerTaskImpl;
 
-class WebSpeechRecognitionProvider final : public WebCore::SpeechRecognitionProvider {
-public:
-    explicit WebSpeechRecognitionProvider(WebCore::PageIdentifier identifier)
-        : m_pageIdentifier(identifier)
-    {
-    }
+@interface WebSpeechRecognizerTask : NSObject {
+@private
+    RetainPtr<CaptionGenerationTaskImpl> _impl;
+}
 
-    WebCore::SpeechRecognitionConnection& speechRecognitionConnection() final
-    {
-        if (!m_connection)
-            m_connection = WebSpeechRecognitionConnection::create(m_pageIdentifier);
+- (instancetype)initWithIdentifier:(WebCore::MediaPlayerIdentifier)identifier locale:(NSString*)localeIdentifier delegateCallback:(void(^))callback;
+- (void)audioSamplesAvailable:(AVAudioPCMBuffer)sampleBuffer;
+- (void)abort;
+- (void)stop;
 
-        return *m_connection;
-    }
+@end
 
-private:
-    WebCore::PageIdentifier m_pageIdentifier;
-    RefPtr<WebSpeechRecognitionConnection> m_connection;
-};
+NS_ASSUME_NONNULL_END
 
-} // namespace WebKit
+#endif
