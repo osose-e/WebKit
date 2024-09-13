@@ -144,7 +144,7 @@ enum class WebsiteDataType : uint32_t;
 class SpeechRecognitionRemoteRealtimeMediaSourceManager;
 #endif
 
-//#if ENABLE(VIDEO) && ENABLE(WEB_AUDIO) && HAVE(SPEECH_RECOGNIZER)
+//#if ENABLE(VIDEO) && ENABLE(WEB_AUDIO) && HAVE(SPEECHRECOGNIZER)
 //class SpeechRecognitionAudioSourcePlaybackManager;
 //#endif
 

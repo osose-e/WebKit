@@ -37,10 +37,6 @@ namespace WebCore {
 
 class InbandSynthesizedTextTrackPrivateObjC : public InbandTextTrackPrivate {
 public:
-    // create (implemented on InbandTextTrackPrivate)
-    // set mode (implemented on InbandTextTrackPrivate)
-    // some overrides
-    // InbandTextTrackPrivate::Mode
     using Mode = InbandTextTrackPrivateMode;
     
     static RefPtr<InbandSynthesizedTextTrackPrivateObjC> create(Mode mode, InbandTextTrackPrivate::CueFormat format)
@@ -58,10 +54,6 @@ public:
     void createPartialCueForText(const String& text, const MediaTime);
     void updatePartialCueForText(const String& text, const MediaTime);
     void finalizeCueForText(const String&, const MediaTime start, const MediaTime end);
-    // should override that according to eric!
-    // Also DO set a char limit queen
-    // bool shouldPurgeCuesFromUnbufferedRanges() const final { return true; }
-    
     
 protected:
     InbandSynthesizedTextTrackPrivateObjC(Mode, InbandTextTrackPrivate::CueFormat);

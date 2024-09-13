@@ -395,6 +395,11 @@ private:
 #if ENABLE(WEB_AUDIO)
     WebCore::AudioSourceProvider* audioSourceProvider() final;
 #endif
+    
+#if HAVE(SPEECHRECOGNIZER)
+    void startTranscription() final;
+    void endTranscription() final; 
+#endif
 
 #if ENABLE(LEGACY_ENCRYPTED_MEDIA)
     std::unique_ptr<WebCore::LegacyCDMSession> createSession(const String&, WebCore::LegacyCDMSessionClient&) final;

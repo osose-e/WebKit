@@ -99,34 +99,6 @@ void SpeechRecognizer::start(Ref<RealtimeMediaSource>&& source, bool mockSpeechR
     startCapture(WTFMove(source));
 }
 
-//void SpeechRecognizer::start(AudioSourceProvider* source, bool mockSpeechRecognitionEnabled)
-//{
-//    if (!startRecognition(mockSpeechRecognitionEnabled, clientIdentifier(), m_request->lang(), m_request->continuous(), m_request->interimResults(), m_request->maxAlternatives())) {
-//        auto error = SpeechRecognitionError { SpeechRecognitionErrorType::ServiceNotAllowed, "Failed to start recognition"_s };
-//        m_delegateCallback(SpeechRecognitionUpdate::createError(clientIdentifier(), WTFMove(error)));
-//        return;
-//    }
-//
-//    m_state = State::Running;
-//    m_delegateCallback(SpeechRecognitionUpdate::create(clientIdentifier(), SpeechRecognitionUpdateType::Start));
-//    startCapture(WTFMove(source));
-//}
-//
-//void SpeechRecognizer::startCapture(AudioSourceProvider* source)
-//{
-//    auto dataCallback = [weakThis = WeakPtr { *this }](const auto& time, const auto& data, const auto& description, auto sampleCount) {
-//        if (weakThis)
-//            weakThis->dataCaptured(time, data, description, sampleCount);
-//    };
-//
-//    auto stateUpdateCallback = [weakThis = WeakPtr { *this }](const auto& update) {
-//        if (weakThis)
-//            weakThis->m_delegateCallback(update);
-//    };
-//
-//    m_source = makeUnique<SpeechRecognitionCaptureSource>(clientIdentifier(), WTFMove(dataCallback), WTFMove(stateUpdateCallback), WTFMove(source));
-//}
-
 void SpeechRecognizer::startCapture(Ref<RealtimeMediaSource>&& source)
 {
     auto dataCallback = [weakThis = WeakPtr { *this }](const auto& time, const auto& data, const auto& description, auto sampleCount) {

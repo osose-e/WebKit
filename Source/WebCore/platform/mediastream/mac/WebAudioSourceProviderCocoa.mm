@@ -99,10 +99,9 @@ void WebAudioSourceProviderCocoa::provideInput(AudioBus* bus, size_t framesToPro
 
     ASSERT(framesToProcess <= bus->length());
     m_dataSource->pullSamples(*m_audioBufferList->list(), framesToProcess, m_readCount, 0, AudioSampleDataSource::Copy);
-    // allegedly would want my own callback here
     m_readCount += framesToProcess;
 }
-// hmm
+
 void WebAudioSourceProviderCocoa::prepare(const AudioStreamBasicDescription& format)
 {
     DisableMallocRestrictionsForCurrentThreadScope scope;

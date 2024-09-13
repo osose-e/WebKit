@@ -13224,7 +13224,6 @@
 		76FC2B0812370DA0006A991A /* DOMTokenList.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DOMTokenList.cpp; sourceTree = "<group>"; };
 		76FC2B0912370DA0006A991A /* DOMTokenList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DOMTokenList.h; sourceTree = "<group>"; };
 		76FC2B0A12370DA0006A991A /* DOMTokenList.idl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = DOMTokenList.idl; sourceTree = "<group>"; };
-		770A275D2C879D4C001E6FC3 /* SpeechRecognitionAudioSourceImpl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SpeechRecognitionAudioSourceImpl.h; sourceTree = "<group>"; };
 		7728694B14F8882500F484DC /* EXTTextureFilterAnisotropic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EXTTextureFilterAnisotropic.cpp; sourceTree = "<group>"; };
 		7728694C14F8882500F484DC /* EXTTextureFilterAnisotropic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EXTTextureFilterAnisotropic.h; sourceTree = "<group>"; };
 		7728694D14F8882500F484DC /* EXTTextureFilterAnisotropic.idl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = EXTTextureFilterAnisotropic.idl; sourceTree = "<group>"; };
@@ -31904,7 +31903,6 @@
 				934950B72539434B0099F171 /* SpeechRecognitionAlternative.cpp */,
 				934950BC2539434E0099F171 /* SpeechRecognitionAlternative.h */,
 				934950BB2539434E0099F171 /* SpeechRecognitionAlternative.idl */,
-				770A275D2C879D4C001E6FC3 /* SpeechRecognitionAudioSourceImpl.h */,
 				93F6B81E25679F7100A08488 /* SpeechRecognitionCaptureSource.cpp */,
 				93F6B81B25679F6F00A08488 /* SpeechRecognitionCaptureSource.h */,
 				93F6B81D25679F7000A08488 /* SpeechRecognitionCaptureSourceImpl.cpp */,

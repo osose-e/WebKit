@@ -122,6 +122,11 @@ messages -> RemoteMediaPlayerProxy {
     SetShouldEnableAudioSourceProvider(bool shouldEnable)
 #endif
 
+#if HAVE(SPEECHRECOGNIZER)
+    StartTranscription()
+    EndTranscription()
+#endif
+
 #if PLATFORM(COCOA)
     NativeImageForCurrentTime() -> (std::optional<MachSendRight> sendRight, WebCore::DestinationColorSpace colorSpace) Synchronous
     ColorSpace() -> (WebCore::DestinationColorSpace colorSpace) Synchronous

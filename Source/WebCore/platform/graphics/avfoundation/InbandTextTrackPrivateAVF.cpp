@@ -422,13 +422,8 @@ void InbandTextTrackPrivateAVF::processAttributedStrings(CFArrayRef attributedSt
     for (auto& cueData : arrivingCues) {
         m_cues.append(cueData.get());
         INFO_LOG(LOGIDENTIFIER, "adding cue ", cueData.get());
-        // base class fn
-        // call this in the lambda
-        // the ASP shoudl own the text track
-        // give the ASP a lambda to call back an uuterance
         notifyMainThreadClient([&](auto& client) {
             downcast<InbandTextTrackPrivateClient>(client).addGenericCue(cueData);
-            // follow it up to end up in HTNML media element, to see the objects it goes thru
         });
     }
 

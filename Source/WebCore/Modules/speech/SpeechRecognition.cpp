@@ -57,8 +57,6 @@ SpeechRecognition::SpeechRecognition(Document& document)
         m_connection = &page->speechRecognitionConnection();
         m_connection->registerClient(*this);
     }
-    // there will need to be additional constructors added to the header, that I can implement in my subclass. this will help quite a bit-- I can make these virtual. To help, the additional functions can also exist but arent necessary ? to be used
-    // first a new constructor for a media elem; html i suppose, to extract the media player
 }
 
 void SpeechRecognition::suspend(ReasonForSuspension)

@@ -3607,7 +3607,7 @@ void Page::showPlaybackTargetPicker(PlaybackTargetClientContextIdentifier contex
     chrome().client().showPlaybackTargetPicker(contextId, location, isVideo);
 #endif
 }
-// imp
+
 void Page::playbackTargetPickerClientStateDidChange(PlaybackTargetClientContextIdentifier contextId, MediaProducerMediaStateFlags state)
 {
     chrome().client().playbackTargetPickerClientStateDidChange(contextId, state);
@@ -4405,7 +4405,7 @@ void Page::mainFrameDidChangeToNonInitialEmptyDocument()
         injectUserStyleSheet(userStyleSheet);
     m_userStyleSheetsPendingInjection.clear();
 }
-// here
+
 SpeechRecognitionConnection& Page::speechRecognitionConnection()
 {
     return m_speechRecognitionProvider->speechRecognitionConnection();

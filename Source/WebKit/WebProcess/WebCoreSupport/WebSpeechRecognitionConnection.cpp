@@ -47,7 +47,6 @@ WebSpeechRecognitionConnection::WebSpeechRecognitionConnection(SpeechRecognition
     : m_identifier(identifier)
 {
     WebProcess::singleton().addMessageReceiver(Messages::WebSpeechRecognitionConnection::messageReceiverName(), m_identifier, *this);
-    // what is the 0 for?
     send(Messages::WebProcessProxy::CreateSpeechRecognitionServer(m_identifier), 0);
 
 #if ENABLE(MEDIA_STREAM)

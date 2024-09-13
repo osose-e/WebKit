@@ -92,9 +92,6 @@ void InbandSynthesizedTextTrackPrivateObjC::updatePartialCueForText(const String
 void InbandSynthesizedTextTrackPrivateObjC::finalizeCueForText(const String& text, const MediaTime start, const MediaTime end) {
     ASSERT(isMainThread());
     
-    // Create Cue
-    
-    // create a new cue if not already existing (as an ivar), and each time a new word is gotten ad d to exist ing string and updaate the cue data and the final message should update one last time or finalize and clear the ivar
     if (start != m_currentCue->startTime())
         return;
     
@@ -102,11 +99,6 @@ void InbandSynthesizedTextTrackPrivateObjC::finalizeCueForText(const String& tex
     m_currentCue->setEndTime(end);
 
     m_currentCue->setStatus(GenericCueData::Status::Complete);
-    
-    
-    // add partial cues
-        // 1. potentially make a new method (like one word at a time) to display a cue (updateGenericCue)and keep update the one on screen and then use create cue for text to finalize the cue
-        // PROBLEM:
     
     notifyMainThreadClient([&](auto& client) {
         downcast<InbandTextTrackPrivateClient>(client).updateGenericCue(m_currentCue);

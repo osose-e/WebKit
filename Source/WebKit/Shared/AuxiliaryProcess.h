@@ -47,7 +47,7 @@ OBJC_CLASS NSDictionary;
 namespace IPC {
 class SharedBufferReference;
 }
-  
+
 namespace WebKit {
 
 class SandboxInitializationParameters;

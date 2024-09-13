@@ -38,7 +38,7 @@
 static constexpr size_t maximumRecognitionDuration = 60 * 60;
 
 NS_ASSUME_NONNULL_BEGIN
-// important document where transcriptions take place
+
 @interface WebSpeechRecognizerTaskImpl : NSObject<SFSpeechRecognitionTaskDelegate, SFSpeechRecognizerDelegate> {
 @private
     WebCore::SpeechRecognitionConnectionClientIdentifier _identifier;
