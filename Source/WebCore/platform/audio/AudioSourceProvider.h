@@ -53,7 +53,7 @@ public:
 #if ENABLE(WEB_AUDIO) && ENABLE(VIDEO)
     using CompletedCaptionCreationTask = Function<void(NSString *, const WTF::MediaTime start, const WTF::MediaTime end)>;
     using PartialCaptionCreationTask = Function<void(NSString *, const WTF::MediaTime)>;
-    virtual void beginVideoTranscription(PartialCaptionCreationTask&&, PartialCaptionCreationTask&&, CompletedCaptionCreationTask&&) { };
+    virtual void prepareForVideoTranscription(PartialCaptionCreationTask&&, PartialCaptionCreationTask&&, CompletedCaptionCreationTask&&) { };
 #endif
 
     virtual ~AudioSourceProvider() = default;

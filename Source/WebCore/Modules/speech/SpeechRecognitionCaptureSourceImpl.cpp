@@ -80,12 +80,7 @@ SpeechRecognitionCaptureSourceImpl::~SpeechRecognitionCaptureSourceImpl()
     m_source->removeObserver(*this);
     m_source->stop();
 }
-// get audio samples for the recognizer
-// which is diff from mic
-// we capture in gpu process and make available for the web process
-// our cross process ring buffer bridges the gap
-// we instantiate it in the producer and consumer end
-// when we push into the producer end it signals to the consumer process
+
 #if PLATFORM(COCOA)
 void SpeechRecognitionCaptureSourceImpl::pullSamplesAndCallDataCallback(AudioSampleDataSource* dataSource, const MediaTime& time, const CAAudioStreamDescription& audioDescription, size_t sampleCount)
 {
@@ -143,7 +138,7 @@ void SpeechRecognitionCaptureSourceImpl::audioSamplesAvailable(const WTF::MediaT
         }
         m_dataSource = WTFMove(dataSource);
     }
-// do this
+
     m_dataSource->pushSamples(time, data, sampleCount);
     callOnMainThread([this, weakThis = WeakPtr { *this }, dataSource = m_dataSource, time, audioDescription, sampleCount] {
         if (!weakThis)

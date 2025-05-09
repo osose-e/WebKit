@@ -2230,7 +2230,7 @@ void WebProcessProxy::createSpeechRecognitionServer(SpeechRecognitionServerIdent
     auto checkIfMockCaptureDevicesEnabled = [weakPage = WeakPtr { targetPage }]() {
         return weakPage && weakPage->preferences().mockCaptureDevicesEnabled();
     };
-// !!!
+
 #if ENABLE(MEDIA_STREAM)
     auto createRealtimeMediaSource = [weakPage = WeakPtr { targetPage }]() {
         return weakPage ? weakPage->createRealtimeMediaSourceForSpeechRecognition() : CaptureSourceOrError { { "Page is invalid"_s, WebCore::MediaAccessDenialReason::InvalidAccess } };

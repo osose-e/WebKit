@@ -4405,7 +4405,7 @@ void Page::mainFrameDidChangeToNonInitialEmptyDocument()
         injectUserStyleSheet(userStyleSheet);
     m_userStyleSheetsPendingInjection.clear();
 }
-// here
+
 SpeechRecognitionConnection& Page::speechRecognitionConnection()
 {
     return m_speechRecognitionProvider->speechRecognitionConnection();

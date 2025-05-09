@@ -1190,6 +1190,7 @@ def headers_for_type(type):
         'WTF::UnixFileDescriptor': ['<wtf/unix/UnixFileDescriptor.h>'],
         'webrtc::WebKitEncodedFrameInfo': ['"RTCWebKitEncodedFrameInfo.h"'],
         'WebKit::BufferSetBackendHandle': ['"BufferAndBackendInfo.h"'],
+        'WTF::MediaTime' : ['<wtf/MediaTime.h>'],
     }
 
     headers = []

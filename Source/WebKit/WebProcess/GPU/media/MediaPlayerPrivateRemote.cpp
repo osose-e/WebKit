@@ -1398,6 +1398,18 @@ AudioSourceProvider* MediaPlayerPrivateRemote::audioSourceProvider()
 }
 #endif
 
+#if HAVE(SPEECHRECOGNIZER)
+void MediaPlayerPrivateRemote::startTranscription()
+{
+    connection().send(Messages::RemoteMediaPlayerProxy::StartTranscription(), m_id);
+}
+
+void MediaPlayerPrivateRemote::endTranscription()
+{
+    connection().send(Messages::RemoteMediaPlayerProxy::EndTranscription(), m_id);
+}
+#endif
+
 #if ENABLE(LEGACY_ENCRYPTED_MEDIA)
 std::unique_ptr<LegacyCDMSession> MediaPlayerPrivateRemote::createSession(const String&, LegacyCDMSessionClient&)
 {

@@ -688,7 +688,7 @@ const Logger& AudioContext::logger() const
 #endif
 
 #if ENABLE(VIDEO)
-// here
+
 ExceptionOr<Ref<MediaElementAudioSourceNode>> AudioContext::createMediaElementSource(HTMLMediaElement& mediaElement)
 {
     ALWAYS_LOG(LOGIDENTIFIER);

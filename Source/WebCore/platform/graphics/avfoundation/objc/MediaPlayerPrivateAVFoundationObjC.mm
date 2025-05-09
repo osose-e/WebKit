@@ -2655,40 +2655,39 @@ AudioSourceProvider* MediaPlayerPrivateAVFoundationObjC::audioSourceProvider()
 #if HAVE(SPEECHRECOGNIZER)
 void MediaPlayerPrivateAVFoundationObjC::startTranscription()
 {
-    if (m_provider && m_synthesizedTextTrack)
-        return;
+    if (!m_synthesizedTextTrack) {
+        m_synthesizedTextTrack = InbandSynthesizedTextTrackPrivateObjC::create(InbandTextTrackPrivateMode::Showing, InbandTextTrackPrivateAVF::CueFormat::Generic);
+        // TODO: Determine/Verify if the default mode should be showing.
+        
+        if (auto player = this->player())
+            player->addTextTrack(*m_synthesizedTextTrack);
+    }
     
-    m_synthesizedTextTrack = InbandSynthesizedTextTrackPrivateObjC::create(InbandTextTrackPrivateMode::Showing, InbandTextTrackPrivateAVF::CueFormat::Generic);
-    if (auto player = this->player())
-        player->addTextTrack(*m_synthesizedTextTrack);
-    
-#if ENABLE(WEB_AUDIO) && USE(MEDIATOOLBOX)
-
-    // createCompletionHandler
-    // updateCompletionHandler
-    // finalizeCompletionHandler
-    m_provider = AudioSourceProviderAVFObjC::create(m_avPlayerItem.get());
-    m_provider->beginVideoTranscription( [ weakThis = ThreadSafeWeakPtr { *this } ](NSString *text, const WTF::MediaTime start){
-        if (RefPtr protectedThis = weakThis.get()) {
-            protectedThis->m_synthesizedTextTrack->createPartialCueForText(text, start);
-        }
-    }, [ weakThis = ThreadSafeWeakPtr { *this } ](NSString *text, const WTF::MediaTime start){
-        if (RefPtr protectedThis = weakThis.get()) {
-            protectedThis->m_synthesizedTextTrack->updatePartialCueForText(text, start);
-        }
-    }, [ weakThis = ThreadSafeWeakPtr { *this } ] (NSString *text, const WTF::MediaTime start, const WTF::MediaTime end) {
-        if (RefPtr protectedThis = weakThis.get()) {
-            protectedThis->m_synthesizedTextTrack->finalizeCueForText(text, start, end);
-        }
-    });
-    m_provider->setAudioTrack(firstEnabledAudibleTrack());
-#endif
+    if (!m_transcriptionProvider ) {
+        m_transcriptionProvider = AudioSourceProviderAVFObjC::create(m_avPlayerItem.get());
+        m_provider->prepareForVideoTranscription( [ weakThis = ThreadSafeWeakPtr { *this } ](NSString *text, const WTF::MediaTime start){
+            if (RefPtr protectedThis = weakThis.get()) {
+                protectedThis->m_synthesizedTextTrack->createPartialCueForText(text, start);
+            }
+        }, [ weakThis = ThreadSafeWeakPtr { *this } ](NSString *text, const WTF::MediaTime start){
+            if (RefPtr protectedThis = weakThis.get()) {
+                protectedThis->m_synthesizedTextTrack->updatePartialCueForText(text, start);
+            }
+        }, [ weakThis = ThreadSafeWeakPtr { *this } ] (NSString *text, const WTF::MediaTime start, const WTF::MediaTime end) {
+            if (RefPtr protectedThis = weakThis.get()) {
+                protectedThis->m_synthesizedTextTrack->finalizeCueForText(text, start, end);
+            }
+        });
+        m_transcriptionProvider->setTranscriptionGeneratorInUse(true);
+        m_transcriptionProvider->setAudioTrack(firstEnabledAudibleTrack());
+    }
     
 }
 
 void MediaPlayerPrivateAVFoundationObjC::endTranscription()
 {
-    
+    m_transcriptionProvider->setTranscriptionGeneratorInUse(false);
+    // TODO: Perhaps also destroy the synthesized text track and transcription provider (ASP) here.
 }
 #endif
 
